@@ -1,6 +1,6 @@
 
 
- ChatGPT AI Project
+BugBox AI Project
 
 This project demonstrates the implementation of a ChatGPT AI chatbot using the OpenAI GPT-3.5-turbo API, React.js for the frontend, and various UI components for the chat interface. The chatbot responds to user inputs by sending requests to the OpenAI API and displaying AI-generated responses in real time.
 
