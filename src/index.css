@@ -54,6 +54,14 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Remove focus outline and shadow globally for input fields */
+input:focus,
+textarea:focus,
+.cs-message-input__content-editor:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
