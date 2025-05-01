@@ -155,3 +155,24 @@
   height: auto; /* Maintain the aspect ratio */
   border-radius: 8px; /* Optional: Add rounded corners */
 }
+
+/* === MARKDOWN CODE BLOCK SUPPORT === */
+/* Prevent long lines in code blocks from overflowing */
+.cs-message__content pre {
+  white-space: pre-wrap !important; /* Allow wrapping in <pre> */
+  word-break: break-word;           /* Break long strings if needed */
+  overflow-x: auto;                 /* Add horizontal scroll if really needed */
+}
+
+/* === CHAT BUBBLE TEXT ALIGNMENT & PADDING === */
+.cs-message__content {
+  text-align: left !important;        /* Align text to the left for better readability */
+  padding-top: 1px !important;        /* Trim top padding to reduce empty space */
+  padding-bottom: 1px !important;     /* Trim bottom padding similarly */
+}
+
+/* === MESSAGE SPACING === */
+/* Reduce space between message bubbles */
+.cs-message-list__scroll-wrapper {
+  row-gap: 4px !important; /* Tighter vertical spacing between messages */
+}

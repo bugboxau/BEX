@@ -1,53 +1,61 @@
 
 
-BugBox AI Project
+# Bugbox AI Tutor
 
-This project demonstrates the implementation of a ChatGPT AI chatbot using the OpenAI GPT-3.5-turbo API, React.js for the frontend, and various UI components for the chat interface. The chatbot responds to user inputs by sending requests to the OpenAI API and displaying AI-generated responses in real time.
+This project implements a simple **AI tutor** designed to help young students understand the basics of coding. It uses OpenAI’s `gpt-4o` API and a modern React-based frontend to deliver clean, lesson-friendly interactions through a dynamic chat interface.
 
- Features
+---
+
+## Features
+
 - Real-time chat interface built with React.js.
-- Integration with OpenAI GPT-3.5-turbo API.
-- Displays typing indicators when the AI is processing inputs.
-- Dynamic message rendering with a clean chat interface.
+- Integration with OpenAI `gpt-4o` API (configurable).
+- Displays typing indicators while AI is thinking.
+- Syntax-aware code formatting in markdown.
+- Fallback "offline mode" if API key is missing.
+- Clean UI styled with `@chatscope/chat-ui-kit-react`.
 
- Prerequisites
+---
+
+## Prerequisites
+
 Before running the project, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (version 14.x or higher)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
-- An active OpenAI API key (paid subscription).
+- [Node.js](https://nodejs.org/) (v14 or higher)
+- [npm](https://www.npmjs.com/) (included with Node)
+- A valid OpenAI API key (requires paid account)
 
-Packages Used
-The following NPM packages are required for this project:
+---
 
-1. **React.js**: JavaScript library for building user interfaces.
-2. **@chatscope/chat-ui-kit-react**: A UI library for chat interfaces.
-3. **@chatscope/chat-ui-kit-styles**: Styles for the chat UI components.
-4. **dotenv**: A module to load environment variables (optional but recommended for hiding sensitive API keys).
+## Packages Used
 
- Installation Steps
+- `react`: Core frontend framework.
+- `@chatscope/chat-ui-kit-react`: Chat interface components.
+- `@chatscope/chat-ui-kit-styles`: Style dependencies for the above.
+- `dotenv`: (Optional) Load environment variables like the API key securely.
+
+---
+
+## Installation Steps
 
 #### 1. Clone the Repository
+
+Clone the repository onto your local system:
+
 ```bash
-git clone https://github.com/yourusername/chatgpt-ai-project.git
-cd chatgpt-ai-project
+git clone https://github.com/yourusername/redback-bugbox-ai.git
+cd redback-bugbox-ai.git
 ```
 
 #### 2. Install Dependencies
+
 Run the following command to install all the necessary dependencies:
 
 ```bash
 npm install
 ```
+#### 3. Create an Environment File
 
-This will install:
-- React.js
-- @chatscope/chat-ui-kit-react
-- @chatscope/chat-ui-kit-styles
-- dotenv (optional, but highly recommended for hiding API keys)
-
-#### 3. Create an Environment File (Optional but Recommended)
-
-Since the OpenAI API key is sensitive, it's important to store it securely. You can do this by using the `dotenv` package to load environment variables from a `.env` file.
+Since the OpenAI API key is sensitive, it's important to store it securely. You can do this by using `.env` file.
 
 - Create a `.env` file in the root directory of the project:
 
@@ -58,61 +66,66 @@ touch .env
 - Inside the `.env` file, add your API key:
 
 ```
-REACT_APP_OPENAI_API_KEY=your-api-key-here
+VITE_OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-Note: Never commit the `.env` file to a public repository.
+**NOTE: Never commit the `.env` file to a public repository.**
 
-#### 4. Update the Code to Use Environment Variables
+## Running the Application
 
-In the code, update the section where the API key is used to load it from the `.env` file instead of hardcoding it:
-
-```js
-const API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
-```
-
-Make sure you import `dotenv` at the top of the main component if you haven't already:
-
-```js
-import dotenv from 'dotenv';
-dotenv.config();
-```
-
-#### 5. Run the Application
-
-Now that the dependencies are installed and your API key is secured, start the development server:
+Assuming that all dependencies have been are installed and your API key is secured in a .env file, to start the development server run the following command:
 
 ```bash
-npm start
+npm run dev
 ```
 
-This will start the app on `http://localhost:3000`, where you can interact with the ChatGPT AI.
-
- How It Works
-
-- Frontend: The app is built with React.js and displays a real-time chat interface using components from `@chatscope/chat-ui-kit-react`.
-- API Integration**: When a user sends a message, the app makes a POST request to the OpenAI GPT-3.5 API, processes the response, and renders it back into the chat window.
-- Typing Indicator**: While the API processes the request, a typing indicator shows that the AI is generating a response.
-
-Important Notes
-
-- API Key: The OpenAI API is a **paid service**. Make sure you have a valid API key to interact with the GPT-3.5-turbo model. **Never expose your API key publicly** by committing it to a repository. Use environment variables as described in this README.
-  
- Future Improvements
-- Implement authentication for user access control.
-- Add error-handling for cases when the API is down or the rate limit is reached.
-- Further optimize the user interface with advanced animations and custom themes.
-
- License
-This project is licensed under the MIT License.
+This will start the app on `http://localhost:5173/` (default Vite port), where you can interact with the ChatGPT AI.
 
 ---
 
- Example `.env` File (Do Not Commit)
+## How It Works
+
+- **Frontend**: The app is built with React.js and displays a real-time chat interface using components from `@chatscope/chat-ui-kit-react`.
+- **API Integration**: When a user sends a message, the app makes a POST request to the OpenAI gpt-4o API, processes the response, and renders it back into the chat window.
+- **Typing Indicator**: While the API processes the request, a typing indicator shows that the AI is generating a response.
+- **System Prompt Control**: The application uses a predefined system message to guide the AI’s tone and formatting. This ensures that code examples are displayed using properly formatted markdown blocks with language-specific syntax highlighting.
+- **Model Configuration**: The OpenAI model is set via the `OPENAI_MODEL` constant and can be easily updated or moved to an environment variable for flexible deployment.
+- **Error Handling**: The system handles malformed responses, HTTP request failures, and missing API keys. If the API is unavailable or misconfigured, a fallback "offline mode" simulates a basic reply so that local development can continue without interruption.
+- **Security Consideration**: All API requests require a valid OpenAI API key, which is injected through environment variables and never exposed in code or committed files.
+
+---
+
+## Important Notes
+
+- **API Key**: The OpenAI API is a **paid service**. Always ensure your API key is valid and kept secure. 
+- **Environment Configuration**: Make sure your `.env` file contains the following line (do not include quotes):
 
 ```bash
-REACT_APP_OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+VITE_OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
+
+- **Shared Project Caution**: This is a collaborative and ongoing project. Contributors should double-check that they:
+    - Do **not hardcode** API keys into components.
+    - Use the existing `DEBUG` flag to control console output.
+    - Be mindful not to include local logs or test keys when committing to the repository.
+    - Keep the OpenAI model (`gpt-4o`, `gpt-3.5-turbo`, etc.) consistent unless testing different configurations intentionally.
+- **Never expose your API key publicly** by committing it to a repository. Use environment variables as described in this README.
+- **Fallback Mode**: If the API key is missing or misconfigured, the chatbot will switch to an "offline mode" and simulate a placeholder response. This is helpful for frontend debugging and offline testing.
+
+---
+
+## Future Improvements
+
+- Implement authentication for user access control.
+- Further optimize the user interface with advanced animations and custom themes.
+- Save and load chat history from local storage.
+- Analytics dashboard for educators (what students ask, where they struggle).
+
+---
+
+## License
+
+This project is licensed under the MIT License.
 
 ---
 
