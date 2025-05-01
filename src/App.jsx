@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import './Chat.css';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import bugboxLogo from './assets/bugbox-logo.png';
+import { filterMessage } from './contentFilter';
+import { generateSystemMessage } from './tutorConfig';
 import {
   MainContainer,
   ChatContainer,
@@ -29,7 +31,7 @@ function debugLog(...args) {
 function App() {
   const [messages, setMessages] = useState([
     {
-      message: "Hello, I'm Bugbox AI! Ask me anything!",
+      message: "Hello! I'm your Bugbox Tutor. How can I help you?",
       sentTime: 'just now',
       sender: 'ChatGPT',
       direction: 'incoming',
@@ -57,7 +59,7 @@ function App() {
       setStudentLesson('');
       setMessages([
         {
-          message: "Hello, I'm Bugbox AI! Ask me anything!",
+          message: "Hello! I'm your Bugbox Tutor. How can I help you?",
           sentTime: 'just now',
           sender: 'ChatGPT',
           direction: 'incoming',
@@ -70,25 +72,22 @@ function App() {
     }
   };
 
-  const generateSystemMessage = () => {
-    const name = studentName || "student";
-    const lessonInfo = studentLesson.trim() !== ''
-      ? ` You're currently working on "${studentLesson}", so make sure to keep explanations focused on that topic.`
-      : " Feel free to ask about any programming topic.";
-
-    const tone = Number(studentAge) < 10
-      ? "Use simple words and be friendly like you're explaining something to a younger kid."
-      : "Explain things clearly as if you're helping a student who's just starting out with coding.";
-
-    return {
-      role: 'system',
-      content: `Your name is Bugbox AI. Refer to the student as "${name}". ${tone}${lessonInfo} When providing code examples, always use markdown formatting with language syntax highlighting. For example:\n\n\`\`\`javascript\nconst example = 'code';\n\`\`\``,
-    };
-  };
-
   const handleSend = async (message) => {
     if (!message || message.trim() === '') {
       console.warn('[handleSend] Empty message skipped.');
+      return;
+    }
+
+    // Run content filter before proceeding
+    const result = filterMessage(message);
+    if (!result.allowed) {
+      setMessages(prev => [...prev, {
+        message: result.reason,
+        direction: 'incoming',
+        sender: 'ChatGPT',
+        avatar: '🤖',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }]);
       return;
     }
 
@@ -100,7 +99,6 @@ function App() {
       avatar: '👤',
       sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-
     const newMessages = [...messages, newMessage];
     debugLog('[handleSend] New user message:', newMessage);
     setMessages(newMessages);
@@ -111,20 +109,6 @@ function App() {
   };
 
   async function processMessageToChatGPT(chatMessages) {
-    const apiMessages = chatMessages.map((msg) => {
-      const role = msg.sender === 'ChatGPT' ? 'assistant' : 'user';
-      return { role, content: msg.message };
-    });
-
-    const systemMessage = generateSystemMessage();
-
-    const apiRequestBody = {
-      model: OPENAI_MODEL,
-      messages: [systemMessage, ...apiMessages],
-    };
-
-    debugLog('[API Request Body]', apiRequestBody);
-
     if (!API_KEY || API_KEY === 'fake-key') {
       debugLog('[processMessageToChatGPT] No valid API key provided.');
       setMessages([
@@ -141,6 +125,20 @@ function App() {
       setIsTyping(false);
       return;
     }
+
+    const apiMessages = chatMessages.map((msg) => {
+      const role = msg.sender === 'ChatGPT' ? 'assistant' : 'user';
+      return { role, content: msg.message };
+    });
+
+    const systemMessage = generateSystemMessage(studentName, Number(studentAge), studentLesson);
+
+    const apiRequestBody = {
+      model: OPENAI_MODEL,
+      messages: [systemMessage, ...apiMessages],
+    };
+
+    debugLog('[API Request Body]', apiRequestBody);
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
