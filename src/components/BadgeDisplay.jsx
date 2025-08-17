@@ -29,7 +29,7 @@ const badges = [
   id: 5,
   title: 'React Frontend Developer',
   description: 'Built interactive UI components with React and Tailwind.',
-  imageUrl: 'https://via.placeholder.com/100?text=React+Badge',
+  imageUrl: 'https://via.placeholder.com/100?text=React+Badge',clear
 },
 
 ];
