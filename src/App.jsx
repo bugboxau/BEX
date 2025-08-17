@@ -1,3 +1,4 @@
+import BadgeDisplay from './components/BadgeDisplay';
 import React, { useState } from 'react';
 import './App.css';
 import './Chat.css';
@@ -47,6 +48,8 @@ function App() {
   const [studentName, setStudentName] = useState('');
   const [studentAge, setStudentAge] = useState('');
   const [studentLesson, setStudentLesson] = useState('');
+  const [showBadges, setShowBadges] = useState(false);
+
 
   const resetStudentInfo = () => {
     const confirmed = window.confirm(
@@ -287,6 +290,39 @@ function App() {
 
               </ChatContainer>
             </MainContainer>
+  <div 
+    style={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center", 
+      gap: "20px", 
+      width: "100%", 
+      padding: "20px" 
+    }}
+  >
+    <div style={{ textAlign: "center" }}>
+      <button
+        onClick={() => setShowBadges(!showBadges)}
+        style={{
+          backgroundColor: '#6c63ff',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          border: 'none',
+          cursor: 'pointer'
+        }}
+      >
+        {showBadges ? 'Hide Badges' : 'Show Badges'}
+      </button>
+
+      {showBadges && (
+        <div style={{ marginTop: '20px' }}>
+          <BadgeDisplay />
+        </div>
+      )}
+    </div>
+  </div>
+
           </div>
         </div>
       </div>
