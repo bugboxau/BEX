@@ -13,15 +13,18 @@ import {
   Message,
   MessageInput,
   TypingIndicator,
+  InputToolbox,
 } from '@chatscope/chat-ui-kit-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
+import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
+
 
 // NOTE: Ensure that your personal API key is loaded into the .env file
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 // NOTE: Toggle DEBUG to 'false' in order to remove console logs 
-const DEBUG = true;
+const DEBUG = true
 // NOTE: OpenAI model used for chat responses
 const OPENAI_MODEL = 'gpt-4o';
 
@@ -40,6 +43,8 @@ function App() {
     },
   ]);
 
+  const [uploadedFile, setUploadedFile] = useState(null);
+
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
 
@@ -50,6 +55,99 @@ function App() {
   const [studentLesson, setStudentLesson] = useState('');
   const [showBadges, setShowBadges] = useState(false);
 
+
+  // Holds extracted text from a just-uploaded file until the user presses Send
+  const [pendingFileContent, setPendingFileContent] = useState('');
+
+  // Max chars from a file we keep to stay within token limits
+  const MAX_FILE_TEXT = 1000;
+
+  // File upload handlers
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setUploadedFile(file);
+      // Create a message with the file information
+      const fileMessage = {
+        message: `File uploaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+        direction: 'outgoing',
+        sender: 'user',
+        position: 'right',
+        avatar: '👤',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        file: file
+      };
+      setMessages(prev => [...prev, fileMessage]);
+      // Send the file to the AI for processing
+      processUploadedFile(file);
+    }
+  };
+
+  const processUploadedFile = async (file) => {
+    try {
+      setIsTyping(true);
+
+      // 1. Extract text depending on file type
+      let text = '';
+      if (file.type === 'application/pdf') {
+        text = await extractTextFromPDF(file);
+      } else if (file.type.startsWith('image/')) {
+        text = await extractTextFromImage(file);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            message: 'Sorry, I can only read PDF or image files at the moment.',
+            direction: 'incoming',
+            sender: 'ChatGPT',
+            position: 'left',
+            avatar: '🤖',
+            sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
+      if (!text || text.trim() === '') {
+        text = '(No text could be extracted from the file.)';
+      }
+
+      // Keep only a concise slice of text
+      const truncated = text.length > MAX_FILE_TEXT ? `${text.slice(0, MAX_FILE_TEXT)}... [truncated]` : text;
+
+      // Store for later; do NOT auto-send to ChatGPT yet
+      setPendingFileContent(truncated);
+
+      // Let the user know extraction succeeded and they can now ask something
+      setMessages(prev => [
+        ...prev,
+        {
+          message: `I've read "${file.name}". Type your question or instructions about it, then press Send.`,
+          direction: 'incoming',
+          sender: 'ChatGPT',
+          position: 'left',
+          avatar: '🤖',
+          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      setMessages(prev => [
+        ...prev,
+        {
+          message: `Sorry, I couldn't read the file: ${error.message}`,
+          direction: 'incoming',
+          sender: 'ChatGPT',
+          position: 'left',
+          avatar: '🤖',
+          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const resetStudentInfo = () => {
     const confirmed = window.confirm(
@@ -102,13 +200,37 @@ function App() {
       avatar: '👤',
       sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    const newMessages = [...messages, newMessage];
+
+    let messagesForAI;
+    let newMessagesState;
+
+    if (pendingFileContent) {
+      const fileContextMessage = {
+        message: `Context from uploaded file:\n\n${pendingFileContent}`,
+        direction: 'outgoing',
+        sender: 'user',
+        position: 'right',
+        avatar: '👤',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      // Visible to AI, NOT to user
+      messagesForAI = [...messages, fileContextMessage, newMessage];
+      // Only show the user-typed message in the UI
+      newMessagesState = [...messages, newMessage];
+
+      setPendingFileContent('');
+    } else {
+      messagesForAI = [...messages, newMessage];
+      newMessagesState = messagesForAI;
+    }
+
     debugLog('[handleSend] New user message:', newMessage);
-    setMessages(newMessages);
-    setInputValue(''); // Clear the input after sending
+    setMessages(newMessagesState);
+    setInputValue('');
     setIsTyping(true);
 
-    await processMessageToChatGPT(newMessages);
+    await processMessageToChatGPT(messagesForAI);
   };
 
   async function processMessageToChatGPT(chatMessages) {
@@ -136,9 +258,18 @@ function App() {
 
     const systemMessage = generateSystemMessage(studentName, Number(studentAge), studentLesson);
 
+    // Additional system-level guidance to keep responses concise and well-structured
+    const styleGuideMessage = {
+      role: 'system',
+      content:
+        'Answer concisely (≤150 words). If using bullet points, do NOT insert blank lines between items. There shuld not be any empty or blank lines whatsoever. Use Markdown formatting where appropriate.'
+    };
+
     const apiRequestBody = {
       model: OPENAI_MODEL,
-      messages: [systemMessage, ...apiMessages],
+      messages: [systemMessage, styleGuideMessage, ...apiMessages],
+      max_tokens: 300, // roughly 150–200 words max
+      temperature: 0.7,
     };
 
     debugLog('[API Request Body]', apiRequestBody);
@@ -161,22 +292,29 @@ function App() {
       const data = await response.json();
       debugLog('[OpenAI API Response]', data);
       
-      const replyContent = data.choices?.[0]?.message?.content;
+      let replyContent = data.choices?.[0]?.message?.content;
       if (!replyContent) {
         throw new Error("Missing message content from OpenAI.");
       }
 
-      setMessages([
-        ...chatMessages,
-        {
-          message: replyContent,
-          sender: 'ChatGPT',
-          direction: 'incoming',
-          position: 'left',
-          avatar: '🤖',
-          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      // Condense excessive blank lines (2+ \n) into a single newline for compact display
+      replyContent = replyContent.replace(/\n{2,}/g, '\n');
+
+      const aiMessage = {
+        message: replyContent,
+        sender: 'ChatGPT',
+        direction: 'incoming',
+        position: 'left',
+        avatar: '🤖',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      // Filter out any hidden context messages before showing in UI
+      const visible = chatMessages.filter(
+        m => !(m.message && m.message.startsWith('Context from uploaded file'))
+      );
+
+      setMessages([...visible, aiMessage]);
     } catch (error) {
       console.error('[processMessageToChatGPT Error]', error);
       setMessages([
@@ -194,6 +332,9 @@ function App() {
       setIsTyping(false);
     }
   }
+
+
+
 
   return (
     <div id="bugbox-popup-root">
@@ -244,6 +385,7 @@ function App() {
               </div>
             </div>
           )}
+          
 
           {/* Chat content */}
           <div style={{ position: 'relative', height: '800px', width: '700px' }}>
@@ -276,18 +418,39 @@ function App() {
                   placeholder="Type your message here..."
                   value={inputValue}
                   onChange={(e) => {
-                    // Use e.target.value only if it's a native input (this lib may pass string directly)
                     setInputValue(e);
                   }}
                   onSend={(message) => {
                     handleSend(message);
-                    // Do NOT reset inputValue here, it will conflict with internal clearing
-                    // Just let ChatScope handle it automatically
                   }}
                   attachButton={false}
                 />
 
-
+                <InputToolbox>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('file-upload').click()}
+                    style={{
+                      backgroundColor: '#4a90e2',
+                      color: 'white',
+                      padding: '8px 12px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    📎 Upload File
+                  </button>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                </InputToolbox>
               </ChatContainer>
             </MainContainer>
   <div 

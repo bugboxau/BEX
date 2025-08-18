@@ -14,10 +14,17 @@
     "@chatscope/chat-ui-kit-react": "^2.0.3",
     "dotenv": "^16.4.7",
     "openai": "^4.89.0",
+    "pdfjs-dist": "^5.4.54",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+<<<<<<< Updated upstream
     "react-markdown": "^9.1.0",
     "rehype-highlight": "^6.0.0"
+=======
+    "react-markdown": "^9.0.0",
+    "rehype-highlight": "^6.0.0",
+    "tesseract.js": "^6.0.1"
+>>>>>>> Stashed changes
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
