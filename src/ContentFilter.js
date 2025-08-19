@@ -20,13 +20,13 @@ const baseBannedPatterns = [
   /n+[\W_]*i+[\W_]*g+[\W_]*g+[\W_]*e+[\W_]*r+/i,
   /k+[\W_]*i+[\W_]*k+[\W_]*e+/i,
   /c+[\W_]*h+[\W_]*i+[\W_]*n+[\W_]*k+/i,
-  /s+[\W_]*p+[\W_]*i+[\W_]*c+/i,
-  /g+[\W_]*o+[\W_]*o+[\W_]*k+/i,
+  /\bspic\b/i,
+  /\bgook\b/i,
   /t+[\W_]*a+[\W_]*r+[\W_]*b+/i,
   /s+[\W_]*l+[\W_]*u+[\W_]*t+/i,
   /c+[\W_]*u+[\W_]*n+[\W_]*t+/i,
   /f+[\W_]*a+[\W_]*g+[\W_]*g+[\W_]*o+[\W_]*t+/i,
-  /a+[\W_]*b+[\W_]*o+/i,
+  /\babo\b/i,
   /c+[\W_]*o+[\W_]*o+[\W_]*n+/i,
 ];
 
