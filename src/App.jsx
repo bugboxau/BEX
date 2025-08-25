@@ -55,6 +55,9 @@ function App() {
   const [studentLesson, setStudentLesson] = useState('');
   const [showBadges, setShowBadges] = useState(false);
 
+  // Upload success popup state
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [uploadFileName, setUploadFileName] = useState('');
 
   // Holds extracted text from a just-uploaded file until the user presses Send
   const [pendingFileContent, setPendingFileContent] = useState('');
@@ -67,18 +70,11 @@ function App() {
     const file = event.target.files[0];
     if (file) {
       setUploadedFile(file);
-      // Create a message with the file information
-      const fileMessage = {
-        message: `File uploaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
-        direction: 'outgoing',
-        sender: 'user',
-        position: 'right',
-        avatar: '👤',
-        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        file: file
-      };
-      setMessages(prev => [...prev, fileMessage]);
-      // Send the file to the AI for processing
+      // Show success popup
+      setShowUploadPopup(true);
+      setUploadFileName(file.name);
+      setTimeout(() => setShowUploadPopup(false), 3000);
+      // Process the file in the background but do NOT post any chat messages yet
       processUploadedFile(file);
     }
   };
@@ -116,21 +112,8 @@ function App() {
       // Keep only a concise slice of text
       const truncated = text.length > MAX_FILE_TEXT ? `${text.slice(0, MAX_FILE_TEXT)}... [truncated]` : text;
 
-      // Store for later; do NOT auto-send to ChatGPT yet
+      // Silently store the extracted text; user will decide when to send
       setPendingFileContent(truncated);
-
-      // Let the user know extraction succeeded and they can now ask something
-      setMessages(prev => [
-        ...prev,
-        {
-          message: `I've read "${file.name}". Type your question or instructions about it, then press Send.`,
-          direction: 'incoming',
-          sender: 'ChatGPT',
-          position: 'left',
-          avatar: '🤖',
-          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
     } catch (error) {
       console.error('Error processing file:', error);
       setMessages(prev => [
@@ -205,8 +188,20 @@ function App() {
     let newMessagesState;
 
     if (pendingFileContent) {
-      const fileContextMessage = {
+      // Hidden context for the AI so it can read the file
+      const hiddenFileContextMessage = {
         message: `Context from uploaded file:\n\n${pendingFileContent}`,
+        direction: 'outgoing',
+        sender: 'user',
+        position: 'right',
+        avatar: '👤',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        hidden: true, // custom flag – we will ignore in UI rendering
+      };
+
+      // Visible indicator for the user in the chat log
+      const visibleFileIndicator = {
+        message: `📎 ${uploadFileName || 'File attached'}`,
         direction: 'outgoing',
         sender: 'user',
         position: 'right',
@@ -214,12 +209,11 @@ function App() {
         sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      // Visible to AI, NOT to user
-      messagesForAI = [...messages, fileContextMessage, newMessage];
-      // Only show the user-typed message in the UI
-      newMessagesState = [...messages, newMessage];
+      messagesForAI = [...messages, hiddenFileContextMessage, newMessage];
+      newMessagesState = [...messages, visibleFileIndicator, newMessage];
 
       setPendingFileContent('');
+      setUploadFileName('');
     } else {
       messagesForAI = [...messages, newMessage];
       newMessagesState = messagesForAI;
@@ -309,11 +303,7 @@ function App() {
         sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      // Filter out any hidden context messages before showing in UI
-      const visible = chatMessages.filter(
-        m => !(m.message && m.message.startsWith('Context from uploaded file'))
-      );
-
+      const visible = chatMessages.filter(m => !m.hidden);
       setMessages([...visible, aiMessage]);
     } catch (error) {
       console.error('[processMessageToChatGPT Error]', error);
@@ -338,6 +328,9 @@ function App() {
 
   return (
     <div id="bugbox-popup-root">
+      {showUploadPopup && (
+        <div className="upload-success-popup">✅ {uploadFileName} uploaded</div>
+      )}
       <div className="bugbox-popup">
         <div className="App">
           {/* Add the logo inside the App container */}
@@ -374,13 +367,45 @@ function App() {
                   onChange={(e) => setStudentAge(e.target.value)}
                   placeholder="e.g. 9"
                 />
-                <label>Lesson (optional):</label>
+                <label>Upload Lesson Plan (optional):</label>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('lesson-file-upload').click()}
+                  className="upload-button"
+                >
+                  📎 Upload File
+                </button>
+                <input
+                  id="lesson-file-upload"
+                  type="file"
+                  accept=".pdf,image/*"
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                />
+
+                {/* Allow user to send first chat message directly from onboarding */}
+                <label>Ask me something:</label>
                 <input
                   type="text"
-                  value={studentLesson}
-                  onChange={(e) => setStudentLesson(e.target.value.trimStart())}
-                  placeholder="e.g. Variables in Python"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Type your question..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSend(inputValue);
+                      setShowModal(false);
+                    }
+                  }}
                 />
+                <button
+                  onClick={() => {
+                    handleSend(inputValue);
+                    setShowModal(false);
+                  }}
+                >
+                  Send & Start Chat
+                </button>
+
                 <button onClick={() => setShowModal(false)}>Start Chat</button>
               </div>
             </div>
@@ -430,16 +455,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => document.getElementById('file-upload').click()}
-                    style={{
-                      backgroundColor: '#4a90e2',
-                      color: 'white',
-                      padding: '8px 12px',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '1rem',
-                    }}
+                    className="upload-button"
                   >
                     📎 Upload File
                   </button>

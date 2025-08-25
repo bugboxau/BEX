@@ -181,17 +181,104 @@ textarea:focus,
   margin-left: 10px;
 }
 
+/* Fun, vibrant upload button */
 .upload-button {
-  background-color: #4a90e2;
-  color: white;
-  padding: 8px 12px;
+  background-color: var(--bugbox-orange);
+  color: #fff;
+  padding: 10px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }
 
 .upload-button:hover {
-  background-color: #3a78c2;
+  transform: translateY(-2px) scale(1.05) rotate(-2deg);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  background-color: #e0480f; /* slightly darker orange */
+}
+
+.upload-button:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ChatGPT-like inline file preview */
+.file-popup{
+  position:absolute;
+  bottom:72px; /* slightly higher */
+  right:16px; /* align to right inside border */
+  background:#2b2b2b;
+  color:#fff;
+  min-width:260px;
+  max-width:320px;
+  padding:10px 12px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.4);
+  font-size:.9rem;
+  z-index:10000; /* ensure on top */
+}
+
+.file-popup .file-icon{
+  flex:0 0 36px;
+  height:36px;
+  border-radius:8px;
+  background:#ff4f93; /* pink like ChatGPT */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+
+.file-popup .file-info{
+  flex:1 1 auto;
+  overflow:hidden;
+}
+
+.file-popup .file-name{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight:600;
+}
+
+.file-popup .file-type{
+  font-size:.75rem;
+  opacity:.7;
+}
+
+.file-popup .close-btn{
+  background:none;
+  border:none;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+  align-self:flex-start;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.upload-success-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #2b2b2b;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-weight: 600;
+  z-index: 10000;
+  animation: fadeInOut 3s forwards;
 }
