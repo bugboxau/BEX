@@ -4,7 +4,7 @@ import './App.css';
 import './Chat.css';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import bugboxLogo from './assets/bugbox-logo.png';
-import { filterMessage } from './contentFilter';
+import { filterMessage } from './ContentFilter';
 import { generateSystemMessage } from './tutorConfig';
 import {
   MainContainer,
