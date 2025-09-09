@@ -252,7 +252,7 @@ function App() {
     debugLog('[API Request Body]', apiRequestBody);
 
     try {     
-      const response = await fetch("/netlify/functions/ask-bot", {
+      const response = await fetch("/.netlify/functions/ask-bot", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
