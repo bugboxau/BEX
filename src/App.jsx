@@ -228,23 +228,6 @@ function App() {
   };
 
   async function processMessageToChatGPT(chatMessages) {
-    if (!API_KEY || API_KEY === 'fake-key') {
-      debugLog('[processMessageToChatGPT] No valid API key provided.');
-      setMessages([
-        ...chatMessages,
-        {
-          message: '(No connection available) Running in offline mode.',
-          sender: 'ChatGPT',
-          direction: 'incoming',
-          position: 'left',
-          avatar: '🤖',
-          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
-      setIsTyping(false);
-      return;
-    }
-
     const apiMessages = chatMessages.map((msg) => {
       const role = msg.sender === 'ChatGPT' ? 'assistant' : 'user';
       return { role, content: msg.message };
@@ -252,7 +235,7 @@ function App() {
 
     const systemMessage = generateSystemMessage(studentName, Number(studentAge), studentLesson);
 
-    // Additional system-level guidance to keep responses concise and well-structured
+    //Additional system-level guidance to keep responses concise and well-structured
     const styleGuideMessage = {
       role: 'system',
       content:
@@ -268,15 +251,16 @@ function App() {
 
     debugLog('[API Request Body]', apiRequestBody);
 
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
+    try {     
+      const response = await fetch("/.netlify/functions/ask-bot", {
+        method: "POST",
         headers: {
-          Authorization: 'Bearer ' + API_KEY,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(apiRequestBody),
-      });
+        body: JSON.stringify({
+          messages: [systemMessage, styleGuideMessage, ...apiMessages],
+        }),
+      });      
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -286,7 +270,9 @@ function App() {
       const data = await response.json();
       debugLog('[OpenAI API Response]', data);
       
-      let replyContent = data.choices?.[0]?.message?.content;
+      //let replyContent = data.choices?.[0]?.message?.content;
+      let replyContent = data.reply;
+
       if (!replyContent) {
         throw new Error("Missing message content from OpenAI.");
       }
