@@ -23,7 +23,7 @@ import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
 import ChatHistory from './ChatHistory.jsx';
 
 // === Config ===
-const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+const API_KEY = import.meta.env.OPENAI_API_KEY;
 const DEBUG = true;
 const OPENAI_MODEL = 'gpt-4o';
 const MAX_FILE_TEXT = 1000;
@@ -256,6 +256,7 @@ export default function App() {
   
 
   async function processMessageToChatGPT(chatMessages) {
+    /*
     if (!API_KEY || API_KEY === 'fake-key') {
       setActiveMessages([...chatMessages, {
         message: '(No connection available) Running in offline mode.',
@@ -268,6 +269,7 @@ export default function App() {
       setIsTyping(false);
       return;
     }
+    */
 
     const apiMessages = chatMessages.map((msg) => {
       const role = msg.sender === 'ChatGPT' ? 'assistant' : 'user';
@@ -288,15 +290,18 @@ export default function App() {
       temperature: 0.7,
     };
 
+    debugLog('[API Request Body]', apiRequestBody);
+
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
+      const response = await fetch("/.netlify/functions/ask-bot", {
+        method: "POST",
         headers: {
-          Authorization: 'Bearer ' + API_KEY,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(apiRequestBody),
-      });
+        body: JSON.stringify({
+          messages: [systemMessage, styleGuideMessage, ...apiMessages],
+        }),
+      });      
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -304,7 +309,7 @@ export default function App() {
       }
 
       const data = await response.json();
-      let replyContent = data.choices?.[0]?.message?.content;
+      let replyContent = data.reply;
       if (!replyContent) throw new Error("Missing message content from OpenAI.");
       replyContent = replyContent.replace(/\n{2,}/g, '\n');
 
