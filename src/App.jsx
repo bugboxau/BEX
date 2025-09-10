@@ -256,27 +256,14 @@ export default function App() {
   
 
   async function processMessageToChatGPT(chatMessages) {
-    /*
-    if (!API_KEY || API_KEY === 'fake-key') {
-      setActiveMessages([...chatMessages, {
-        message: '(No connection available) Running in offline mode.',
-        sender: 'ChatGPT',
-        direction: 'incoming',
-        position: 'left',
-        avatar: '🤖',
-        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      }]);
-      setIsTyping(false);
-      return;
-    }
-    */
-
     const apiMessages = chatMessages.map((msg) => {
       const role = msg.sender === 'ChatGPT' ? 'assistant' : 'user';
       return { role, content: msg.message };
     });
 
     const systemMessage = generateSystemMessage(studentName, Number(studentAge), studentLesson);
+
+    //Additional system-level guidance to keep responses concise and well-structured
     const styleGuideMessage = {
       role: 'system',
       content:
