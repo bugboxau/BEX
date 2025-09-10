@@ -126,7 +126,7 @@
   position: relative; /* Make the .App container the reference point for absolute positioning */
   border: 4px solid var(--bugbox-orange); /* Add an orange border */
   border-radius: 16px; /* Make the border rounded */
-  padding: 90px 20px 20px 20px; /* Add extra padding at the top for the logo */
+  padding: 90px 20px 0 20px; /* Add extra padding at the top for the logo */
   background-color: var(--bugbox-light-gray); /* Optional: Set a background color */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for depth */
 }
@@ -175,4 +175,27 @@
 /* Reduce space between message bubbles */
 .cs-message-list__scroll-wrapper {
   row-gap: 4px !important; /* Tighter vertical spacing between messages */
+}
+
+/* Ensure chat grid always shows full height, input visible */
+.chat-fullbleed {
+  height: 100%;          /* fill parent */
+  display: grid;
+  grid-template-rows: 1fr auto; /* messages grow, input fixed */
+}
+
+/* Messages should scroll, not cut off */
+.chat-fullbleed .cs-message-list {
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+}
+
+/* Hint button specific tweaks */
+.upload-button.hint-button {
+  background-color: var(--bugbox-secondary); /* Blue for contrast */
+}
+ 
+.upload-button.hint-button:hover {
+  background-color: #0a9de0; /* Darker blue */
 }

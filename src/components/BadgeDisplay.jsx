@@ -46,7 +46,7 @@ export default function BadgeDisplay() {
             width: '180px',
             textAlign: 'center',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            background: 'linear-gradient(to bottom right, #f0f0f0, #ffffff)',
+            background: 'linear-gradient(to bottom right,rgb(199, 199, 199),rgb(180, 179, 179))',
             transition: 'transform 0.2s, box-shadow 0.2s',
             cursor: 'pointer',
           }}

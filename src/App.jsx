@@ -1,5 +1,5 @@
 import BadgeDisplay from './components/BadgeDisplay';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import './Chat.css';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
@@ -20,77 +20,130 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
 
+import ChatHistory from './ChatHistory.jsx';
 
-// NOTE: Ensure that your personal API key is loaded into the .env file
+// === Config ===
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-// NOTE: Toggle DEBUG to 'false' in order to remove console logs 
-const DEBUG = true
-// NOTE: OpenAI model used for chat responses
+const DEBUG = true;
 const OPENAI_MODEL = 'gpt-4o';
+const MAX_FILE_TEXT = 1000;
+const STORAGE_KEY = 'bbx_convos_v2';
 
-function debugLog(...args) {
-  if (DEBUG) console.log(...args);
-}
+function debugLog(...args) { if (DEBUG) console.log(...args); }
+const uuid = () => Math.random().toString(36).slice(2, 10);
+const greeting = () => ({
+  message: "Hello! I'm your Bugbox Tutor. How can I help you?",
+  sentTime: 'just now',
+  sender: 'ChatGPT',
+  direction: 'incoming',
+  avatar: '🤖',
+});
 
-function App() {
-  const [messages, setMessages] = useState([
-    {
-      message: "Hello! I'm your Bugbox Tutor. How can I help you?",
-      sentTime: 'just now',
-      sender: 'ChatGPT',
-      direction: 'incoming',
-      avatar: '🤖',
-    },
-  ]);
+// ============== App ==============
+export default function App() {
+  // ---- Conversations state (persisted) ----
+  const [convos, setConvos] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    const first = { id: uuid(), title: 'New chat', messages: [greeting()] };
+    return [first];
+  });
+  const [activeId, setActiveId] = useState(() => (convos[0] ? convos[0].id : undefined));
+  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(convos)); }, [convos]);
 
+  const activeConvo = useMemo(
+    () => convos.find(c => c.id === activeId) ?? convos[0],
+    [convos, activeId]
+  );
+  const messages = activeConvo?.messages ?? [];
+
+  const setActiveMessages = (updater) => {
+    setConvos(prev => prev.map(c => {
+      if (c.id !== activeConvo.id) return c;
+      const next = typeof updater === 'function' ? updater(c.messages) : updater;
+      return { ...c, messages: next };
+    }));
+  };
+
+  // ---- UI state (unchanged from your app) ----
   const [uploadedFile, setUploadedFile] = useState(null);
-
+  const [pendingFileContent, setPendingFileContent] = useState('');
+  const [uploadFileName, setUploadFileName] = useState('');
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [showBadges, setShowBadges] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Onboarding state
+  // Onboarding
   const [showModal, setShowModal] = useState(true);
   const [studentName, setStudentName] = useState('');
   const [studentAge, setStudentAge] = useState('');
   const [studentLesson, setStudentLesson] = useState('');
-  const [showBadges, setShowBadges] = useState(false);
 
-  // Upload success popup state
-  const [showUploadPopup, setShowUploadPopup] = useState(false);
-  const [uploadFileName, setUploadFileName] = useState('');
+  // ---- Sidebar actions ----
+  const handleNewChat = () => {
+    const c = { id: uuid(), title: 'New chat', messages: [greeting()] };
+    setConvos(prev => [c, ...prev]);
+    setActiveId(c.id);
+    setInputValue('');
+    setPendingFileContent('');
+    setUploadFileName('');
+  };
 
-  // Holds extracted text from a just-uploaded file until the user presses Send
-  const [pendingFileContent, setPendingFileContent] = useState('');
+  const handleDeleteChat = (id) => {
+    setConvos(prev => {
+      const next = prev.filter(c => c.id !== id);
+      if (!next.length) {
+        const fresh = { id: uuid(), title: 'New chat', messages: [greeting()] };
+        setActiveId(fresh.id);
+        return [fresh];
+      }
+      if (id === activeId) setActiveId(next[0].id);
+      return next;
+    });
+  };
 
-  // Max chars from a file we keep to stay within token limits
-  const MAX_FILE_TEXT = 1000;
+  const handleRenameChat = (id, title) => {
+    setConvos(prev => prev.map(c => c.id === id ? { ...c, title } : c));
+  };
 
-  // File upload handlers
+  const handleSelectChat = (id) => setActiveId(id);
+
+  // ---- Reset Student Info (only clears active chat) ----
+  const resetStudentInfo = () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to reset your name, age, and lesson?\nThis will restart the conversation setup.'
+    );
+    if (!confirmed) return;
+    setStudentName(''); setStudentAge(''); setStudentLesson('');
+    setActiveMessages([greeting()]);
+    setShowModal(true);
+  };
+
+  // ---- File upload ----
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setUploadedFile(file);
-      // Show success popup
-      setShowUploadPopup(true);
-      setUploadFileName(file.name);
-      setTimeout(() => setShowUploadPopup(false), 3000);
-      // Process the file in the background but do NOT post any chat messages yet
-      processUploadedFile(file);
-    }
+    if (!file) return;
+    setUploadedFile(file);
+    setShowUploadPopup(true);
+    setUploadFileName(file.name);
+    setTimeout(() => setShowUploadPopup(false), 3000);
+    processUploadedFile(file);
   };
 
   const processUploadedFile = async (file) => {
     try {
       setIsTyping(true);
-
-      // 1. Extract text depending on file type
       let text = '';
       if (file.type === 'application/pdf') {
         text = await extractTextFromPDF(file);
       } else if (file.type.startsWith('image/')) {
         text = await extractTextFromImage(file);
       } else {
-        setMessages(prev => [
+        setActiveMessages(prev => [
           ...prev,
           {
             message: 'Sorry, I can only read PDF or image files at the moment.',
@@ -101,25 +154,17 @@ function App() {
             sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
-        setIsTyping(false);
         return;
       }
-
-      if (!text || text.trim() === '') {
-        text = '(No text could be extracted from the file.)';
-      }
-
-      // Keep only a concise slice of text
+      if (!text || text.trim() === '') text = '(No text could be extracted from the file.)';
       const truncated = text.length > MAX_FILE_TEXT ? `${text.slice(0, MAX_FILE_TEXT)}... [truncated]` : text;
-
-      // Silently store the extracted text; user will decide when to send
       setPendingFileContent(truncated);
-    } catch (error) {
-      console.error('Error processing file:', error);
-      setMessages(prev => [
+    } catch (err) {
+      console.error('Error processing file:', err);
+      setActiveMessages(prev => [
         ...prev,
         {
-          message: `Sorry, I couldn't read the file: ${error.message}`,
+          message: `Sorry, I couldn't read the file: ${err.message}`,
           direction: 'incoming',
           sender: 'ChatGPT',
           position: 'left',
@@ -132,40 +177,13 @@ function App() {
     }
   };
 
-  const resetStudentInfo = () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to reset your name, age, and lesson?\nThis will restart the conversation setup.'
-    );
-    if (confirmed) {
-      debugLog('[resetStudentInfo] Student info reset confirmed.');
-      setStudentName('');
-      setStudentAge('');
-      setStudentLesson('');
-      setMessages([
-        {
-          message: "Hello! I'm your Bugbox Tutor. How can I help you?",
-          sentTime: 'just now',
-          sender: 'ChatGPT',
-          direction: 'incoming',
-          avatar: '🤖',
-        },
-      ]);
-      setShowModal(true);
-    } else {
-      debugLog('[resetStudentInfo] Reset cancelled by user.');
-    }
-  };
-
+  // ---- Send message (updates ONLY the active conversation) ----
   const handleSend = async (message) => {
-    if (!message || message.trim() === '') {
-      console.warn('[handleSend] Empty message skipped.');
-      return;
-    }
-
-    // Run content filter before proceeding
+    if (!message || message.trim() === '') return;
+  
     const result = filterMessage(message);
     if (!result.allowed) {
-      setMessages(prev => [...prev, {
+      setActiveMessages(prev => [...prev, {
         message: result.reason,
         direction: 'incoming',
         sender: 'ChatGPT',
@@ -174,8 +192,8 @@ function App() {
       }]);
       return;
     }
-
-    const newMessage = {
+  
+    const userMsg = {
       message,
       direction: 'outgoing',
       sender: 'user',
@@ -183,24 +201,21 @@ function App() {
       avatar: '👤',
       sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-
+  
     let messagesForAI;
-    let newMessagesState;
-
+    let newState;
+  
     if (pendingFileContent) {
-      // Hidden context for the AI so it can read the file
-      const hiddenFileContextMessage = {
+      const hiddenFileContext = {
         message: `Context from uploaded file:\n\n${pendingFileContent}`,
         direction: 'outgoing',
         sender: 'user',
         position: 'right',
         avatar: '👤',
         sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        hidden: true, // custom flag – we will ignore in UI rendering
+        hidden: true,
       };
-
-      // Visible indicator for the user in the chat log
-      const visibleFileIndicator = {
+      const visibleIndicator = {
         message: `📎 ${uploadFileName || 'File attached'}`,
         direction: 'outgoing',
         sender: 'user',
@@ -208,39 +223,48 @@ function App() {
         avatar: '👤',
         sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-
-      messagesForAI = [...messages, hiddenFileContextMessage, newMessage];
-      newMessagesState = [...messages, visibleFileIndicator, newMessage];
-
+  
+      messagesForAI = [...messages, hiddenFileContext, userMsg];
+      newState = [...messages, visibleIndicator, userMsg];
       setPendingFileContent('');
       setUploadFileName('');
     } else {
-      messagesForAI = [...messages, newMessage];
-      newMessagesState = messagesForAI;
+      messagesForAI = [...messages, userMsg];
+      newState = messagesForAI;
     }
-
-    debugLog('[handleSend] New user message:', newMessage);
-    setMessages(newMessagesState);
+  
+    setActiveMessages(newState);
+  
+    // update convo title/preview
+    setConvos(prev =>
+      prev.map(c => {
+        if (c.id !== activeConvo.id) return c;
+        const title = c.title === 'New chat' && message.trim()
+          ? message.trim().slice(0, 40)
+          : c.title;
+        const preview = message.trim().slice(0, 60);
+        return { ...c, title, preview };
+      })
+    );
+  
     setInputValue('');
     setIsTyping(true);
-
+  
+    // ✅ now guaranteed messagesForAI is defined
     await processMessageToChatGPT(messagesForAI);
   };
+  
 
   async function processMessageToChatGPT(chatMessages) {
     if (!API_KEY || API_KEY === 'fake-key') {
-      debugLog('[processMessageToChatGPT] No valid API key provided.');
-      setMessages([
-        ...chatMessages,
-        {
-          message: '(No connection available) Running in offline mode.',
-          sender: 'ChatGPT',
-          direction: 'incoming',
-          position: 'left',
-          avatar: '🤖',
-          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+      setActiveMessages([...chatMessages, {
+        message: '(No connection available) Running in offline mode.',
+        sender: 'ChatGPT',
+        direction: 'incoming',
+        position: 'left',
+        avatar: '🤖',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }]);
       setIsTyping(false);
       return;
     }
@@ -251,8 +275,6 @@ function App() {
     });
 
     const systemMessage = generateSystemMessage(studentName, Number(studentAge), studentLesson);
-
-    // Additional system-level guidance to keep responses concise and well-structured
     const styleGuideMessage = {
       role: 'system',
       content:
@@ -262,11 +284,9 @@ function App() {
     const apiRequestBody = {
       model: OPENAI_MODEL,
       messages: [systemMessage, styleGuideMessage, ...apiMessages],
-      max_tokens: 300, // roughly 150–200 words max
+      max_tokens: 300,
       temperature: 0.7,
     };
-
-    debugLog('[API Request Body]', apiRequestBody);
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -284,14 +304,8 @@ function App() {
       }
 
       const data = await response.json();
-      debugLog('[OpenAI API Response]', data);
-      
       let replyContent = data.choices?.[0]?.message?.content;
-      if (!replyContent) {
-        throw new Error("Missing message content from OpenAI.");
-      }
-
-      // Condense excessive blank lines (2+ \n) into a single newline for compact display
+      if (!replyContent) throw new Error("Missing message content from OpenAI.");
       replyContent = replyContent.replace(/\n{2,}/g, '\n');
 
       const aiMessage = {
@@ -304,10 +318,18 @@ function App() {
       };
 
       const visible = chatMessages.filter(m => !m.hidden);
-      setMessages([...visible, aiMessage]);
+      setActiveMessages([...visible, aiMessage]);
+
+      // Update preview to last assistant reply
+      setConvos(prev =>
+        prev.map(c => c.id === activeConvo.id
+          ? { ...c, preview: aiMessage.message.slice(0, 60) }
+          : c
+        )
+      );
     } catch (error) {
       console.error('[processMessageToChatGPT Error]', error);
-      setMessages([
+      setActiveMessages([
         ...chatMessages,
         {
           message: `Sorry, I encountered an error. ${error.message}`,
@@ -323,29 +345,81 @@ function App() {
     }
   }
 
-
-
+    // NEW: Handler for hint button click
+    const handleHintRequest = () => {
+      const hintMessage = "Can I have a hint?"; // Customize this if needed (e.g., "Hint please on the current topic!")
+      handleSend(hintMessage);
+    };
 
   return (
     <div id="bugbox-popup-root">
       {showUploadPopup && (
-        <div className="upload-success-popup">✅ {uploadFileName} uploaded</div>
+        <div 
+        className="upload-success-popup">✅ {uploadFileName} uploaded
+        </div>
       )}
-      <div className="bugbox-popup">
-        <div className="App">
-          {/* Add the logo inside the App container */}
+  
+      <div
+        className="bugbox-popup"
+        style={{ display: "flex", flexDirection: "row", width: "100%", alignItems: "stretch" }}
+      >
+        {/* Slim, controlled sidebar */}
+        <ChatHistory
+          convos={convos}
+          activeId={activeId}
+          onNewChat={handleNewChat}
+          onSelect={handleSelectChat}
+          onRename={handleRenameChat}
+          onDelete={handleDeleteChat}
+          sidebarOpen={true}
+        />
+  
+        {/* Right content */}
+        <div 
+
+        className={`App ${showBadges ? 'with-badges' : ''}`}
+        style={{ flex: 1, minWidth: 0 }}
+        
+        >
           <div className="bugbox-logo-container">
             <img src={bugboxLogo} alt="BugBox Logo" className="bugbox-logo" />
           </div>
-
-          {/* Reset chat */}
-          <div style={{ marginBottom: '1rem' }}>
-            <button onClick={resetStudentInfo} style={{ backgroundColor: 'var(--bugbox-secondary)' }}>
+  
+          {/* header row: left = Reset, right = Show Badges */}
+          <div className="chat-header">
+            <button onClick={resetStudentInfo} style={{ backgroundColor: "var(--bugbox-dark-gray)" }}>
               Reset Student Info
             </button>
+  
+            <button
+              onClick={() => setShowBadges((v) => !v)}
+              className="show-badges-btn"
+              style={{
+                backgroundColor: "var(--bugbox-dark-gray)",
+                color: "white",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {showBadges ? "Hide Badges" : "Show Badges"}
+            </button>
           </div>
-
-          {/* Onboarding Modal */}
+  
+          {/* Badges live INSIDE .App */}
+          {showBadges && (
+            <div className="badges-holder">
+              <BadgeDisplay
+                studentName={studentName}
+                studentAge={studentAge}
+                studentLesson={studentLesson}
+                onClose={() => setShowBadges(false)}
+              />
+            </div>
+          )}
+  
+          {/* Onboarding modal */}
           {showModal && (
             <div className="modal-overlay">
               <div className="modal-content">
@@ -370,7 +444,7 @@ function App() {
                 <label>Upload Lesson Plan (optional):</label>
                 <button
                   type="button"
-                  onClick={() => document.getElementById('lesson-file-upload').click()}
+                  onClick={() => document.getElementById("lesson-file-upload").click()}
                   className="upload-button"
                 >
                   📎 Upload File
@@ -380,10 +454,9 @@ function App() {
                   type="file"
                   accept=".pdf,image/*"
                   onChange={handleFileUpload}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 />
-
-                {/* Allow user to send first chat message directly from onboarding */}
+  
                 <label>Ask me something:</label>
                 <input
                   type="text"
@@ -391,7 +464,7 @@ function App() {
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Type your question..."
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       handleSend(inputValue);
                       setShowModal(false);
                     }
@@ -405,108 +478,90 @@ function App() {
                 >
                   Send & Start Chat
                 </button>
-
                 <button onClick={() => setShowModal(false)}>Start Chat</button>
               </div>
             </div>
           )}
-          
-
-          {/* Chat content */}
-          <div style={{ position: 'relative', height: '800px', width: '700px' }}>
-            <MainContainer>
-              <ChatContainer>
-                <MessageList
-                  scrollBehavior="smooth"
-                  typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
-                >
-                  {messages.map((message, i) => (
-                    <Message
-                      key={i}
-                      model={{
-                        ...message,
-                        position: 'single',
-                        className: message.sender === 'user' ? 'user-message' : 'chatgpt-message',
-                        avatar: message.avatar,
-                      }}
-                    >
-                      <Message.CustomContent>
-                        <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                          {message.message}
-                        </ReactMarkdown>
-                      </Message.CustomContent>
-                    </Message>
-                  ))}
-                </MessageList>
-
-                <MessageInput
-                  placeholder="Type your message here..."
-                  value={inputValue}
-                  onChange={(e) => {
-                    setInputValue(e);
-                  }}
-                  onSend={(message) => {
-                    handleSend(message);
-                  }}
-                  attachButton={false}
-                />
-
-                <InputToolbox>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('file-upload').click()}
-                    className="upload-button"
+  
+          {/* Chat area */}
+          <div className="chat-wrapper">
+            <div className="chat-fullbleed">
+              <MainContainer>
+                <ChatContainer>
+                  <MessageList
+                    scrollBehavior="smooth"
+                    typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
                   >
-                    📎 Upload File
-                  </button>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept=".pdf,image/*"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
+                    {messages.map((message, i) => (
+                      <Message
+                        key={i}
+                        model={{
+                          ...message,
+                          position: "single",
+                          className: message.sender === "user" ? "user-message" : "chatgpt-message",
+                          avatar: message.avatar,
+                        }}
+                      >
+                        <Message.CustomContent>
+                          <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                            {message.message}
+                          </ReactMarkdown>
+                        </Message.CustomContent>
+                      </Message>
+                    ))}
+                  </MessageList>
+  
+                  <MessageInput
+                    placeholder="Type your message here..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e)}
+                    onSend={(msg) => handleSend(msg)}
+                    attachButton={false}
                   />
-                </InputToolbox>
-              </ChatContainer>
-            </MainContainer>
-  <div 
-    style={{ 
-      display: "flex", 
-      flexDirection: "column", 
-      alignItems: "center", 
-      gap: "20px", 
-      width: "100%", 
-      padding: "20px" 
-    }}
-  >
-    <div style={{ textAlign: "center" }}>
-      <button
-        onClick={() => setShowBadges(!showBadges)}
-        style={{
-          backgroundColor: '#6c63ff',
-          color: 'white',
-          padding: '10px 20px',
-          borderRadius: '8px',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        {showBadges ? 'Hide Badges' : 'Show Badges'}
-      </button>
+  
+                  <InputToolbox>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("file-upload").click()}
+                      className="upload-button"
+                    >
+                      📎 Upload File
+                    </button>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={handleFileUpload}
+                      style={{ display: "none" }}
+                    />
 
-      {showBadges && (
-        <div style={{ marginTop: '20px' }}>
-          <BadgeDisplay />
-        </div>
-      )}
-    </div>
-  </div>
-
+                      {/* NEW: Hint button */}
+                      <button
+                      type="button"
+                      onClick={handleHintRequest}
+                      className="upload-button" // Reuse upload-button class for consistent styling
+                      style={{ marginLeft: '10px' }} // Add spacing between buttons
+                    >
+                      💡 Hint
+                    </button>
+                  </InputToolbox>
+                </ChatContainer>
+              </MainContainer>
+            </div>
+  
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "20px",
+                width: "100%",
+                padding: "20px",
+              }}
+            />
           </div>
         </div>
       </div>
     </div>
-  );
+  );  
 }
-
-export default App;

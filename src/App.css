@@ -1,6 +1,6 @@
 :root {
   --bugbox-orange: #ff5412;
-  --bugbox-secondary: #12bdff;
+  --bugbox-secondary: lab(72.06% -16.13 -43.31);
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -21,25 +21,18 @@ a {
   color: var(--bugbox-orange);
   text-decoration: inherit;
 }
+a:hover { color: var(--bugbox-secondary); }
 
-a:hover {
-  color: var(--bugbox-secondary);
-}
-
-body {
+html, body, #root {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
   background-color: #242424;
+  overflow: hidden; /* stop page scroll */
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
+/* Buttons */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -52,215 +45,92 @@ button {
   cursor: pointer;
   transition: border-color 0.25s, background-color 0.25s;
 }
-
 button:hover {
   border-color: var(--bugbox-secondary);
   background-color: #e0480f;
 }
+button:focus, button:focus-visible { outline: 4px auto var(--bugbox-secondary); }
 
-button:focus,
-button:focus-visible {
-  outline: 4px auto var(--bugbox-secondary);
-}
-
+/* App root */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  text-align: initial;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em var(--bugbox-secondary));
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61fb69b9);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
+/* Misc */
+.logo { height: 6em; padding: 1.5em; will-change: filter; transition: filter 300ms; }
+.logo:hover { filter: drop-shadow(0 0 2em var(--bugbox-secondary)); }
+.logo.react:hover { filter: drop-shadow(0 0 2em #61fb69b9); }
+@keyframes logo-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+  a:nth-of-type(2) .logo { animation: logo-spin infinite 20s linear; }
 }
+.card { padding: 2em; }
+.read-the-docs { color: #888; }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-/* Remove focus outline and shadow globally for input fields */
-input:focus,
-textarea:focus,
-.cs-message-input__content-editor:focus {
+/* Remove focus outline/shadow on inputs */
+input:focus, textarea:focus, .cs-message-input__content-editor:focus {
   outline: none !important;
   box-shadow: none !important;
 }
 
-/* Modal styles for onboarding */
+/* Onboarding modal */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed; inset: 0;
   background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: flex; justify-content: center; align-items: center;
   z-index: 9999;
 }
-
 .modal-content {
-  background: #1c1c1c;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  color: white;
+  background: #1c1c1c; padding: 2rem; border-radius: 12px; width: 400px;
+  display: flex; flex-direction: column; gap: 1rem; color: white;
   border: 1px solid var(--bugbox-orange);
 }
-
 .modal-content input {
-  padding: 0.6rem;
-  border: 1px solid #666;
-  border-radius: 8px;
-  background-color: #2a2a2a;
-  color: white;
+  padding: 0.6rem; border: 1px solid #666; border-radius: 8px;
+  background-color: #2a2a2a; color: white;
 }
-
-.modal-content input::placeholder {
-  color: #aaa;
-}
-
+.modal-content input::placeholder { color: #aaa; }
 .modal-content button {
-  padding: 0.6rem;
-  background-color: var(--bugbox-orange);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+  padding: 0.6rem; background-color: var(--bugbox-orange);
+  color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
   transition: background-color 0.25s;
 }
+.modal-content button:hover { background-color: #e0480f; }
 
-.modal-content button:hover {
-  background-color: #e0480f;
-}
-
+/* Upload bar */
 .upload-container {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  background-color: white;
-  border-top: 1px solid #ccc;
+  display: flex; align-items: center; padding: 8px;
+  background-color: white; border-top: 1px solid #ccc;
 }
-
-.upload-button-label {
-  margin-left: 10px;
-}
-
-/* Fun, vibrant upload button */
+.upload-button-label { margin-left: 10px; }
 .upload-button {
-  background-color: var(--bugbox-orange);
-  color: #fff;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 1rem;
+  background-color: var(--bugbox-orange); color: #fff;
+  padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer;
+  font-weight: 700; font-size: 1rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
   transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }
-
 .upload-button:hover {
   transform: translateY(-2px) scale(1.05) rotate(-2deg);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
-  background-color: #e0480f; /* slightly darker orange */
+  background-color: #e0480f;
 }
+.upload-button:active { transform: translateY(0) scale(0.97); box-shadow: 0 3px 8px rgba(0,0,0,0.3); }
 
-.upload-button:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+/* File preview popups */
+.file-popup {
+  position:absolute; bottom:72px; right:16px;
+  background:#2b2b2b; color:#fff; min-width:260px; max-width:320px;
+  padding:10px 12px; border-radius:14px; display:flex; align-items:center; gap:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.4); font-size:.9rem; z-index:10000;
 }
-
-/* ChatGPT-like inline file preview */
-.file-popup{
-  position:absolute;
-  bottom:72px; /* slightly higher */
-  right:16px; /* align to right inside border */
-  background:#2b2b2b;
-  color:#fff;
-  min-width:260px;
-  max-width:320px;
-  padding:10px 12px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,.4);
-  font-size:.9rem;
-  z-index:10000; /* ensure on top */
-}
-
-.file-popup .file-icon{
-  flex:0 0 36px;
-  height:36px;
-  border-radius:8px;
-  background:#ff4f93; /* pink like ChatGPT */
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-}
-
-.file-popup .file-info{
-  flex:1 1 auto;
-  overflow:hidden;
-}
-
-.file-popup .file-name{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  font-weight:600;
-}
-
-.file-popup .file-type{
-  font-size:.75rem;
-  opacity:.7;
-}
-
-.file-popup .close-btn{
-  background:none;
-  border:none;
-  color:#fff;
-  font-size:14px;
-  cursor:pointer;
-  align-self:flex-start;
-}
+.file-popup .file-icon { flex:0 0 36px; height:36px; border-radius:8px; background:#ff4f93; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.file-popup .file-info { flex:1 1 auto; overflow:hidden; }
+.file-popup .file-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
+.file-popup .file-type { font-size:.75rem; opacity:.7; }
+.file-popup .close-btn { background:none; border:none; color:#fff; font-size:14px; cursor:pointer; align-self:flex-start; }
 
 @keyframes fadeInOut {
   0% { opacity: 0; transform: translateY(-10px); }
@@ -268,17 +138,337 @@ textarea:focus,
   90% { opacity: 1; }
   100% { opacity: 0; }
 }
-
 .upload-success-popup {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #2b2b2b;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  font-weight: 600;
-  z-index: 10000;
-  animation: fadeInOut 3s forwards;
+  position: fixed; top: 20px; right: 20px;
+  background: #2b2b2b; color: #fff; padding: 10px 16px; border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); font-weight: 600;
+  z-index: 10000; animation: fadeInOut 3s forwards;
 }
+
+/* ====== Layout: Sidebar + Chat ====== */
+.bugbox-popup {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.bbx-slim-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #1f1f1f;
+  border-right: 1px solid #333;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.bbx-slim-head {
+  display: flex;
+  gap: 6px;
+  padding: 20px;
+  border-bottom: 1px solid #333;
+}
+.bbx-slim-icon {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.bbx-slim-icon:hover { background: #343434; }
+.bbx-slim-icon.danger { border-color: #7a2b2b; }
+.bbx-slim-icon.danger:hover { background: #4a1f1f; }
+.bbx-slim-list {
+  overflow-y: auto;
+  padding: 6px 20px;
+  flex: 1;
+}
+.bbx-slim-item {
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin: 6px 0;
+  cursor: pointer;
+  background: transparent;
+}
+.bbx-slim-item:hover { background: #262626; }
+.bbx-slim-item.active { background: #2a2a2a; }
+.bbx-slim-title {
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bbx-slim-preview {
+  opacity: 0.7;
+  font-size: 12px;
+  margin-top: 4px;
+  height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Right panel */
+.bugbox-popup > .App {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Header row above chat */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  flex: 0 0 auto;
+}
+
+.chat-wrapper {
+  flex: 1 1 auto;      /* take up all remaining height */
+  min-height: 0;       /* allow shrinking */
+  display: flex;
+  overflow: hidden;    /* stop outer scroll */
+  width: 100%;         /* span full width */
+}
+
+/* Chatscope internals */
+.cs-main-container,
+.cs-chat-container {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Only the messages scroll */
+.cs-message-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Input/toolbox fixed */
+.cs-message-input,
+.cs-input-toolbox {
+  flex: 0 0 auto !important;
+}
+
+/* Show Badges button */
+.show-badges-btn {
+  background-color: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Badge container if outside chat */
+.badges-holder {
+  padding: 8px;
+  flex: 0 0 auto;
+}
+
+/* Force Chatscope internals to fill width, no max-width cap */
+.cs-main-container,
+.cs-chat-container {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: none !important;   /* remove default 1100px cap */
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Only message list scrolls */
+.cs-message-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cs-chat-container {
+  background: white;  /* or your theme card color */
+  border-radius: 0;   /* remove rounded edges if needed */
+}
+
+/* Lock app to viewport and prevent page scroll */
+html, body, #root { height: 100vh; margin: 0; overflow: hidden; }
+
+/* Sidebar + right panel */
+.bugbox-popup { display: flex; height: 100vh; width: 100%; overflow: hidden; }
+.bbx-slim-sidebar { width: 220px; min-width: 220px; height: 100%; }
+.bugbox-popup > .App { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; height: 100%; overflow: hidden; }
+
+/* Header bits (logo/reset/badges) should not shrink */
+.bugbox-logo-container, .chat-header, .badges-holder { flex: 0 0 auto; }
+
+/* Make the white card fill the area and stop outer scrolling */
+.chat-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Full-bleed shell that will host a grid */
+.chat-fullbleed {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto auto;  /* rows: messages | input | toolbox */
+}
+
+/* Force Chatscope container to become a grid as well (belt & suspenders) */
+.chat-fullbleed .cs-chat-container {
+  display: grid !important;
+  grid-template-rows: 1fr auto auto !important;
+  height: 100% !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: hidden !important;
+}
+
+/* Row 1: the ONLY scrollable area */
+.chat-fullbleed .cs-message-list {
+  grid-row: 1 / 2;
+  min-height: 0 !important;      /* critical for grid scrolling */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Row 2 & 3: pinned at the bottom, never overlap the list */
+.chat-fullbleed .cs-message-input {
+  grid-row: 2 / 3;
+  margin: 0 !important;
+}
+.chat-fullbleed .cs-input-toolbox {
+  grid-row: 3 / 4;
+  margin: 0 !important;
+}
+
+/* Kill any width caps that might still be winning elsewhere */
+.chat-fullbleed .cs-main-container,
+.chat-fullbleed .cs-chat-container,
+.chat-fullbleed .cs-message-list {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: stretch !important;
+}
+
+
+/* Make heights include padding/border so 100% doesn't overflow */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Keep .App inside the viewport even with its border/padding */
+.bugbox-popup > .App {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Remove the extra bottom padding that pushed content past 100vh */
+.App { padding: 90px 20px 0 20px; }
+
+/* Only the message list should scroll (prevents layout growth) */
+.cs-message-list { min-height: 0 !important; overflow-y: auto !important; }
+
+/* Compact, single-row badges with horizontal scroll */
+.badges-strip{
+  display: flex;
+  gap: 16px;
+  padding: 6px 10px 0;
+  max-height: 160px;          /* tweak this number to your card height */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.badges-strip > * { flex: 0 0 auto; }   /* prevent wrapping */
+
+/* Slightly reduce top padding when badges are shown */
+.App.with-badges { padding-top: 90px; }  /* was 90px */
+
+.badges-holder{
+  display:flex;
+  gap:16px;
+  padding:6px 12px 0;
+  max-height:140px;      /* adjust to taste */
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.badges-holder > *{ flex:0 0 auto; }
+.App.with-badges{ padding-top:70px; } /* was 90px */
+
+:root{
+  --badge-card-w: 250px;   /* ⬅ width of each card */
+  --badge-card-h: 100px;   /* ⬅ height of each card */
+}
+
+
+/* The badges strip container */
+.badges-holder{
+  display: flex;
+  padding: 6px 12px 0;
+  gap: 12px;
+  height: auto;                 /* let card height define the strip */
+  overflow-x: auto;             /* horizontal scroll if many */
+  overflow-y: hidden;
+}
+
+/* BadgeDisplay root → arrange cards in a row */
+.badges-holder > *{
+  display: flex !important;
+  flex-wrap: nowrap !important; /* change to wrap for multi-rows */
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* ✅ Each badge card */
+.badges-holder > * > *{
+  width: var(--badge-card-w);
+  min-width: var(--badge-card-w);  /* keep consistent width */
+  height: var(--badge-card-h);
+  box-sizing: border-box;
+  padding: 10px 12px !important;   /* inner spacing */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;         /* center content vertically */
+  overflow: hidden;                 /* stop content spill */
+  border-radius: 12px;              /* optional */
+}
+
+/* Optional: keep media/text tidy inside shorter cards */
+.badges-holder > * > * img,
+.badges-holder > * > * svg{
+  max-height: calc(var(--badge-card-h) * 0.45);
+  width: auto;
+  object-fit: contain;
+}
+.badges-holder h1, .badges-holder h2, .badges-holder h3, .badges-holder h4{
+  margin: 4px 0 2px !important;
+  line-height: 1.2 !important;
+}
+.badges-holder p{
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;           /* clamp long text */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
