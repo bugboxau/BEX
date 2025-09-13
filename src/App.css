@@ -796,3 +796,234 @@ html, body, #root { height: 100vh; margin: 0; overflow: hidden; }
   color: #1a1a1a;
 }
 
+/* ===== Certificate Modal Styles ===== */
+.certificate-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.certificate-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  min-height: 400px;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 8px solid gold;
+  text-align: center;
+}
+
+.certificate-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.certificate-header {
+  border-bottom: 2px solid;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.certificate-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.certificate-ribbon {
+  font-size: 40px;
+  margin-top: 10px;
+}
+
+.certificate-body {
+  padding: 20px 0;
+}
+
+.certificate-awarded-to {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.student-name {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 15px 0;
+  text-decoration: underline;
+}
+
+.certificate-description {
+  font-size: 16px;
+  margin: 15px 0;
+  line-height: 1.4;
+}
+
+.certificate-badge {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 10px 20px;
+  border-radius: 25px;
+  display: inline-block;
+  margin: 15px 0;
+  font-weight: bold;
+}
+
+.certificate-date {
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.certificate-footer {
+  margin-top: 25px;
+}
+
+.download-btn {
+  background: linear-gradient(45deg, #ff5412, #ff8c00);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.download-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Badge Display Updates */
+.badge-display-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  color: #333;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.badge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.badge-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.close-badge-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.student-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.student-info p {
+  margin: 5px 0;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.badge-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.badge-card.clickable-badge {
+  cursor: pointer;
+  border: 2px solid #dee2e6;
+}
+
+.badge-card.clickable-badge:hover {
+  border-color: #ff5412;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.badge-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.badge-info h4 {
+  margin: 10px 0 5px 0;
+  color: #2c3e50;
+}
+
+.badge-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.badge-click-hint {
+  font-size: 12px;
+  color: #ff5412;
+  margin-top: 8px;
+  font-weight: bold;
+}
+
+.no-badges {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+/* Print styles for certificate */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .certificate-modal-content,
+  .certificate-modal-content * {
+    visibility: visible;
+  }
+  .certificate-modal-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+  .certificate-close-btn,
+  .download-btn {
+    display: none !important;
+  }
+}

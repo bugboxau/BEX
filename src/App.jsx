@@ -24,6 +24,56 @@ import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
 import { extractText } from './FileProcessor.js';
 
 import ChatHistory from './ChatHistory.jsx';
+
+// === NEW: Certificate Data ===
+// === NEW: Certificate Data ===
+const certificateData = [
+  {
+    id: 'web-security',
+    badgeName: 'Web Application Security Basics',
+    title: 'Certificate of Completion',
+    description: 'For successfully completing the Web Application Security Basics course',
+    imageUrl: '/certificates/security-certificate.jpg',
+    backgroundColor: '#f0f8ff',
+    textColor: '#2c3e50'
+  },
+  {
+    id: 'bug-bounty',
+    badgeName: 'Introduction to Bug Bounty Hunting', 
+    title: 'Bug Bounty Achievement Award',
+    description: 'For demonstrating exceptional skills in bug bounty hunting fundamentals',
+    imageUrl: '/certificates/bug-bounty-certificate.jpg',
+    backgroundColor: '#fff0f5',
+    textColor: '#8b4513'
+  },
+  {
+    id: 'pen-testing',
+    badgeName: 'Advanced Penetration Testing',
+    title: 'Penetration Testing Excellence Certificate',
+    description: 'For showing advanced skills in penetration testing techniques',
+    imageUrl: '/certificates/pen-testing-certificate.jpg',
+    backgroundColor: '#f0fff0',
+    textColor: '#006400'
+  },
+  {
+    id: 'iot-security',
+    badgeName: 'IoT Security Expert',
+    title: 'IoT Security Specialist Certificate',
+    description: 'For demonstrating expertise in IoT security and device authentication',
+    imageUrl: '/certificates/iot-certificate.jpg',
+    backgroundColor: '#fffaf0',
+    textColor: '#8b0000'
+  },
+  {
+    id: 'react-developer',
+    badgeName: 'React Frontend Developer',
+    title: 'React Development Certificate',
+    description: 'For building interactive UI components with React and modern frameworks',
+    imageUrl: '/certificates/react-certificate.jpg',
+    backgroundColor: '#f8f8ff',
+    textColor: '#4b0082'
+  }
+];
 const sampleCourse = {
   id: 'intro-course',
   title: 'Introduction to Programming',
@@ -124,6 +174,9 @@ export default function App() {
   earnedBadges: []
 });
 
+const [selectedCertificate, setSelectedCertificate] = useState(null);
+const [showCertificateModal, setShowCertificateModal] = useState(false);
+
   // Onboarding
   const [showModal, setShowModal] = useState(true);
   const [studentName, setStudentName] = useState('');
@@ -217,6 +270,13 @@ const closeCourse = () => {
   setCourseFlow({ active: false, stage: 'welcome', currentCourse: null, earnedBadges: [] });
 };
 
+const handleBadgeClick = (badgeName) => {
+  const certificate = certificateData.find(cert => cert.badgeName === badgeName);
+  if (certificate) {
+    setSelectedCertificate(certificate);
+    setShowCertificateModal(true);
+  }
+};
 
 const CourseWelcome = ({ onStartCourse }) => (
   <div className="course-welcome">
@@ -351,6 +411,43 @@ const BadgeAward = ({ badgeName, onClose }) => (
   </div>
 );
 
+const CertificateModal = ({ certificate, studentName, onClose }) => {
+  if (!certificate) return null;
+
+  return (
+    <div className="certificate-modal-overlay">
+      <div className="certificate-modal-content" style={{ 
+        backgroundColor: certificate.backgroundColor,
+        color: certificate.textColor
+      }}>
+        <button className="certificate-close-btn" onClick={onClose}>
+          ✕
+        </button>
+        
+        <div className="certificate-header">
+          <h2>{certificate.title}</h2>
+          <div className="certificate-ribbon">🎓</div>
+        </div>
+        
+        <div className="certificate-body">
+          <p className="certificate-awarded-to">This certificate is awarded to</p>
+          <h3 className="student-name">{studentName || 'Student'}</h3>
+          <p className="certificate-description">{certificate.description}</p>
+          <div className="certificate-badge">
+            🏆 {certificate.badgeName}
+          </div>
+          <p className="certificate-date">Date: {new Date().toLocaleDateString()}</p>
+        </div>
+        
+        <div className="certificate-footer">
+          <button className="download-btn" onClick={() => window.print()}>
+            📥 Download Certificate
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
   // ---- File upload ----
   const handleFileUpload = (event) => {
@@ -639,6 +736,13 @@ const processUploadedFile = async (file) => {
         className="upload-success-popup">✅ {uploadFileName} uploaded
         </div>
       )}
+      {showCertificateModal && (
+  <CertificateModal
+    certificate={selectedCertificate}
+    studentName={studentName}
+    onClose={() => setShowCertificateModal(false)}
+  />
+)}
   
       <div
         className="bugbox-popup"
@@ -706,6 +810,7 @@ const processUploadedFile = async (file) => {
             studentAge={studentAge}
             studentLesson={studentLesson}
             onClose={() => setShowBadges(false)}
+            onBadgeClick={handleBadgeClick}
             />
           </div>
         )}
@@ -720,6 +825,7 @@ const processUploadedFile = async (file) => {
                 studentAge={studentAge}
                 studentLesson={studentLesson}
                 onClose={() => setShowBadges(false)}
+                onBadgeClick={handleBadgeClick}
               />
             </div>
           )}
