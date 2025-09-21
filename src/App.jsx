@@ -82,6 +82,16 @@ export default function App() {
   const [studentName, setStudentName] = useState('');
   const [studentAge, setStudentAge] = useState('');
   const [studentLesson, setStudentLesson] = useState('');
+  // Agreements (new) – keep these OUTSIDE of JSX
+  const [agreeRespect, setAgreeRespect] = useState(false);
+  const [agreeFocus, setAgreeFocus]   = useState(false);
+  const [agreeSafety, setAgreeSafety] = useState(false);
+
+
+  const allAgreed = useMemo(
+  () => agreeRespect && agreeFocus && agreeSafety,
+  [agreeRespect, agreeFocus, agreeSafety]
+  );
 
   // ---- Sidebar actions ----
   const handleNewChat = () => {
@@ -339,7 +349,7 @@ export default function App() {
 
     // NEW: Handler for hint button click
     const handleHintRequest = () => {
-      const hintMessage = "Can I have a hint?"; // Customize this if needed (e.g., "Hint please on the current topic!")
+      const hintMessage = "Can I have a hint?"; // Customize this if needed (e.g "Hint please on the current topic!")
       handleSend(hintMessage);
     };
 
@@ -377,27 +387,35 @@ export default function App() {
             <img src={bugboxLogo} alt="BugBox Logo" className="bugbox-logo" />
           </div>
   
-          {/* header row: left = Reset, right = Show Badges */}
+        {/* header row: left = Reset, right = Show Badges */}
+        {!showModal && (
           <div className="chat-header">
             <button onClick={resetStudentInfo} style={{ backgroundColor: "var(--bugbox-dark-gray)" }}>
               Reset Student Info
             </button>
-  
+
             <button
               onClick={() => setShowBadges((v) => !v)}
               className="show-badges-btn"
-              style={{
-                backgroundColor: "var(--bugbox-dark-gray)",
-                color: "white",
-                padding: "10px 20px",
-                borderRadius: "8px",
-                border: "none",
-                cursor: "pointer",
-              }}
+              style={{ backgroundColor: "var(--bugbox-dark-gray)", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer" }}
             >
               {showBadges ? "Hide Badges" : "Show Badges"}
             </button>
           </div>
+        )}
+
+        {showBadges && !showModal && (
+        <div className="badges-holder">
+          <BadgeDisplay
+            studentName={studentName}
+            studentAge={studentAge}
+            studentLesson={studentLesson}
+            onClose={() => setShowBadges(false)}
+            />
+          </div>
+        )}
+
+
   
           {/* Badges live INSIDE .App */}
           {showBadges && (
@@ -410,148 +428,149 @@ export default function App() {
               />
             </div>
           )}
-  
-          {/* Onboarding modal */}
-          {showModal && (
-            <div className="modal-overlay">
-              <div className="modal-content">
-                <h2>Welcome to Bugbox AI!</h2>
-                <p>Let's get started. Please tell me a bit about yourself.</p>
-                <label>Name:</label>
-                <input
-                  type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value.trimStart())}
-                  placeholder="e.g. Sam"
-                  autoFocus
-                />
-                <label>Age:</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={studentAge}
-                  onChange={(e) => setStudentAge(e.target.value)}
-                  placeholder="e.g. 9"
-                />
-                <label>Upload Lesson Plan (optional):</label>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById("lesson-file-upload").click()}
-                  className="upload-button"
-                >
-                  📎 Upload File
-                </button>
-                <input
-                  id="lesson-file-upload"
-                  type="file"
-                  accept=".pdf,image/*"
-                  onChange={handleFileUpload}
-                  style={{ display: "none" }}
-                />
-  
-                <label>Ask me something:</label>
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Type your question..."
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSend(inputValue);
-                      setShowModal(false);
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    handleSend(inputValue);
-                    setShowModal(false);
-                  }}
-                >
-                  Send & Start Chat
-                </button>
-                <button onClick={() => setShowModal(false)}>Start Chat</button>
-              </div>
-            </div>
-          )}
-  
-          {/* Chat area */}
-          <div className="chat-wrapper">
-            <div className="chat-fullbleed">
-              <MainContainer>
-                <ChatContainer>
-                  <MessageList
-                    scrollBehavior="smooth"
-                    typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
-                  >
-                    {messages.map((message, i) => (
-                      <Message
-                        key={i}
-                        model={{
-                          ...message,
-                          position: "single",
-                          className: message.sender === "user" ? "user-message" : "chatgpt-message",
-                          avatar: message.avatar,
-                        }}
-                      >
-                        <Message.CustomContent>
-                          <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                            {message.message}
-                          </ReactMarkdown>
-                        </Message.CustomContent>
-                      </Message>
-                    ))}
-                  </MessageList>
-  
-                  <MessageInput
-                    placeholder="Type your message here..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e)}
-                    onSend={(msg) => handleSend(msg)}
-                    attachButton={false}
-                  />
-  
-                  <InputToolbox>
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById("file-upload").click()}
-                      className="upload-button"
+  {/* Onboarding modal */}
+{showModal && (
+  <div className="modal-overlay">
+    <div className="modal-content">
+      {/* Header */}
+      <div className="modal-header">
+        <h2>Welcome to Bugbox AI!</h2>
+        <p>Before we get going, please agree to the following.</p>
+      </div>
+
+      {/* Agreements */}
+      <div className="agreement-list">
+        <label className="agreement-item">
+          <input
+            type="checkbox"
+            checked={agreeRespect}
+            onChange={(e) => setAgreeRespect(e.target.checked)}
+          />
+          <span>I agree to <strong>be respectful</strong> and treat the AI like a teacher.</span>
+        </label>
+
+        <label className="agreement-item">
+          <input
+            type="checkbox"
+            checked={agreeFocus}
+            onChange={(e) => setAgreeFocus(e.target.checked)}
+          />
+          <span>I agree to <strong>stay focused on learning</strong> and use the tutor to help me achieve my goals.</span>
+        </label>
+
+        <label className="agreement-item">
+          <input
+            type="checkbox"
+            checked={agreeSafety}
+            onChange={(e) => setAgreeSafety(e.target.checked)}
+          />
+          <span>I agree to <strong>be safe</strong> and never share personal information.</span>
+        </label>
+      </div>
+
+      {/* Actions */}
+      <div className="modal-actions">
+        <button
+          disabled={!allAgreed}
+          onClick={() => {
+            if (!allAgreed) return;
+            if (inputValue.trim()) handleSend(inputValue);
+            setShowModal(false);
+          }}
+        >
+          {inputValue.trim() ? "Send & Start Chat" : "Start Chat"}
+        </button>
+        <button
+          className="secondary"
+          disabled={!allAgreed}
+          onClick={() => setShowModal(false)}
+          title={!allAgreed ? "Please tick all checkboxes first" : undefined}
+        >
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+        {/* Chat area */}
+          {!showModal && (
+            <div className="chat-wrapper">
+              <div className="chat-fullbleed">
+                <MainContainer>
+                  <ChatContainer>
+                    <MessageList
+                      scrollBehavior="smooth"
+                      typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
                     >
-                      📎 Upload File
-                    </button>
-                    <input
-                      id="file-upload"
-                      type="file"
-                      accept=".pdf,image/*"
-                      onChange={handleFileUpload}
-                      style={{ display: "none" }}
+                      {messages.map((message, i) => (
+                        <Message
+                          key={i}
+                          model={{
+                            ...message,
+                            position: "single",
+                            className: message.sender === "user" ? "user-message" : "chatgpt-message",
+                            avatar: message.avatar,
+                          }}
+                        >
+                          <Message.CustomContent>
+                            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                              {message.message}
+                            </ReactMarkdown>
+                          </Message.CustomContent>
+                        </Message>
+                      ))}
+                    </MessageList>
+
+                    <MessageInput
+                      placeholder="Type your message here..."
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e)}
+                      onSend={(msg) => handleSend(msg)}
+                      attachButton={false}
                     />
 
-                      {/* NEW: Hint button */}
+                    <InputToolbox>
                       <button
-                      type="button"
-                      onClick={handleHintRequest}
-                      className="upload-button" // Reuse upload-button class for consistent styling
-                      style={{ marginLeft: '10px' }} // Add spacing between buttons
-                    >
-                      💡 Hint
-                    </button>
-                  </InputToolbox>
-                </ChatContainer>
-              </MainContainer>
+                        type="button"
+                        onClick={() => document.getElementById("file-upload").click()}
+                        className="upload-button"
+                      >
+                        📎 Upload File
+                      </button>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,image/*"
+                        onChange={handleFileUpload}
+                        style={{ display: "none" }}
+                      />
+
+                      {/* Hint button */}
+                      <button
+                        type="button"
+                        onClick={handleHintRequest}
+                        className="upload-button"
+                        style={{ marginLeft: '10px' }}
+                      >
+                        💡 Hint
+                      </button>
+                    </InputToolbox>
+                  </ChatContainer>
+                </MainContainer>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "20px",
+                  width: "100%",
+                  padding: "20px",
+                }}
+              />
             </div>
-  
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "20px",
-                width: "100%",
-                padding: "20px",
-              }}
-            />
-          </div>
+            )}
         </div>
       </div>
     </div>
