@@ -19,6 +19,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
+import { extractText } from './FileProcessor.js';
 
 import ChatHistory from './ChatHistory.jsx';
 
@@ -86,6 +87,17 @@ export default function App() {
   const [agreeRespect, setAgreeRespect] = useState(false);
   const [agreeFocus, setAgreeFocus]   = useState(false);
   const [agreeSafety, setAgreeSafety] = useState(false);
+  const [pendingImageData, setPendingImageData] = useState(null); 
+// shape: { url, name, mime }
+
+const fileToDataURL = (file) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+
 
 
   const allAgreed = useMemo(
@@ -144,48 +156,56 @@ export default function App() {
     processUploadedFile(file);
   };
 
-  const processUploadedFile = async (file) => {
-    try {
-      setIsTyping(true);
-      let text = '';
-      if (file.type === 'application/pdf') {
-        text = await extractTextFromPDF(file);
-      } else if (file.type.startsWith('image/')) {
-        text = await extractTextFromImage(file);
-      } else {
-        setActiveMessages(prev => [
-          ...prev,
-          {
-            message: 'Sorry, I can only read PDF or image files at the moment.',
-            direction: 'incoming',
-            sender: 'ChatGPT',
-            position: 'left',
-            avatar: '🤖',
-            sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-        return;
-      }
-      if (!text || text.trim() === '') text = '(No text could be extracted from the file.)';
-      const truncated = text.length > MAX_FILE_TEXT ? `${text.slice(0, MAX_FILE_TEXT)}... [truncated]` : text;
-      setPendingFileContent(truncated);
-    } catch (err) {
-      console.error('Error processing file:', err);
-      setActiveMessages(prev => [
-        ...prev,
-        {
-          message: `Sorry, I couldn't read the file: ${err.message}`,
-          direction: 'incoming',
-          sender: 'ChatGPT',
-          position: 'left',
-          avatar: '🤖',
-          sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
-    } finally {
-      setIsTyping(false);
+  const MAX_ATTACHMENT_CHARS = 6000; // keep requests small
+
+const processUploadedFile = async (file) => {
+  try {
+    setIsTyping(true);
+
+    if (file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')) {
+      // PDF → text extraction (your existing path)
+      const text = await extractTextFromPDF(file);
+      const clipped = text && text.length > MAX_ATTACHMENT_CHARS
+        ? `${text.slice(0, MAX_ATTACHMENT_CHARS)}… [truncated]`
+        : (text || '');
+
+      setPendingFileContent(clipped || '(No text could be extracted)');
+      setUploadFileName(file.name);
+
+      // auto-prompt
+      // await handleSend('Explain this file.');
+      return;
     }
-  };
+
+    if (file.type.startsWith('image/')) {
+      // IMAGE → send the image itself (vision), no OCR needed
+      const url = await fileToDataURL(file);  // e.g. "data:image/png;base64,..."
+      setPendingImageData({ url, name: file.name, mime: file.type });
+      setUploadFileName(file.name);
+
+      // auto-prompt
+      // await handleSend('Explain this image.');
+      return;
+    }
+
+    // Unsupported type
+    setActiveMessages(prev => [...prev, {
+      message: 'Sorry, I can only read PDF or image files.',
+      direction: 'incoming', sender: 'ChatGPT', position: 'left', avatar: '🤖',
+      sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }]);
+  } catch (err) {
+    console.error('Error processing file:', err);
+    setActiveMessages(prev => [...prev, {
+      message: `Sorry, I couldn't read the file: ${err.message}`,
+      direction: 'incoming', sender: 'ChatGPT', position: 'left', avatar: '🤖',
+      sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }]);
+  } finally {
+    setIsTyping(false);
+  }
+};
+
 
   // ---- Send message (updates ONLY the active conversation) ----
   const handleSend = async (message) => {
@@ -233,15 +253,39 @@ export default function App() {
         avatar: '👤',
         sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-  
+    
       messagesForAI = [...messages, hiddenFileContext, userMsg];
       newState = [...messages, visibleIndicator, userMsg];
       setPendingFileContent('');
+      setUploadFileName('');
+    } else if (pendingImageData) {
+      // Hidden image message that backend will pass to GPT-4o
+      const hiddenImageContext = {
+        hidden: true,
+        kind: 'image',
+        dataUrl: pendingImageData.url,
+        alt: uploadFileName || 'uploaded image',
+      };
+      const visibleIndicator = {
+        message: `🖼️ ${uploadFileName || 'Image attached'}`,
+        direction: 'outgoing', 
+        sender: 'user', 
+        position: 'right', 
+        avatar: '👤',
+        sentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+    
+      messagesForAI = [...messages, hiddenImageContext, userMsg];  // sent to model
+      newState = [...messages, visibleIndicator, userMsg];    // shown in UI
+    
+      setPendingImageData(null);
       setUploadFileName('');
     } else {
       messagesForAI = [...messages, userMsg];
       newState = messagesForAI;
     }
+
+    
   
     setActiveMessages(newState);
   
@@ -264,12 +308,34 @@ export default function App() {
     await processMessageToChatGPT(messagesForAI);
   };
   
+  function toApiMessage(m) {
+    // Case 1: Hidden image (we set this in handleSend)
+    if (m.hidden && m.kind === 'image' && m.dataUrl) {
+      return {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Please analyse this image for a student and explain the key steps and tips.' },
+          { type: 'image_url', image_url: { url: m.dataUrl } }
+        ]
+      };
+    }
+  
+    // Case 2: Normal text messages
+    const role = m.sender === 'ChatGPT' ? 'assistant' : 'user';
+    return { role, content: m.message };
+  }
+  
 
   async function processMessageToChatGPT(chatMessages) {
-    const apiMessages = chatMessages.map((msg) => {
-      const role = msg.sender === 'ChatGPT' ? 'assistant' : 'user';
-      return { role, content: msg.message };
-    });
+    const apiMessages = [
+      generateSystemMessage(studentName, Number(studentAge), studentLesson),
+      {
+        role: 'system',
+        content: 'Answer concisely (≤150 words). If using bullet points, no blank lines.'
+      },
+      ...chatMessages.map(toApiMessage)   // <-- use the new helper here
+    ];
+    
 
     const systemMessage = generateSystemMessage(studentName, Number(studentAge), studentLesson);
 

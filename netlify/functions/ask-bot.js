@@ -1,35 +1,38 @@
+// netlify/functions/ask-bot.js
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 export async function handler(event) {
   try {
-    const { messages } = JSON.parse(event.body);
+    const { messages } = JSON.parse(event.body || "{}");
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: messages,
-        max_tokens: 300,
-        temperature: 0.7,
-      }),
+    console.log("[ask-bot] received", messages?.length || 0, "messages");
+    console.log("[ask-bot] last preview:",
+      messages?.at?.(-1)?.content?.slice?.(0, 120) || "(none)"
+    );
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return { statusCode: 400, body: JSON.stringify({ error: "No messages provided" }) };
+    }
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages,
+      max_tokens: 300,
+      temperature: 0.7,
     });
 
-    const data = await response.json();
-
-    // Normalize the reply for frontend
-    const reply = data?.choices?.[0]?.message?.content || "(No reply from AI)";
-
+    const reply = completion.choices[0]?.message?.content || "";
     return {
       statusCode: 200,
-      body: JSON.stringify({ reply }),
+      body: JSON.stringify({ reply })    // ✅ consistent shape
     };
-  } catch (error) {
-    console.error("Function error:", error);
+  } catch (err) {
+    console.error("[ask-bot] error", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: err.message })
     };
   }
 }
