@@ -1,3 +1,4 @@
+import { getOfflineResponse } from './utils/offlineTutor';
 import BadgeDisplay from './components/BadgeDisplay';
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
@@ -321,10 +322,16 @@ export default function App() {
       );
     } catch (error) {
       console.error('[processMessageToChatGPT Error]', error);
+      
+      const userLastMessage = chatMessages[chatMessages.length - 1]?.message || "";
+      const fallback = getOfflineResponse(userLastMessage);
+
+
+
       setActiveMessages([
         ...chatMessages,
         {
-          message: `Sorry, I encountered an error. ${error.message}`,
+          message: fallback,
           sender: 'ChatGPT',
           direction: 'incoming',
           position: 'left',
