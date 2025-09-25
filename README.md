@@ -2,7 +2,7 @@
 
 # Bugbox AI Tutor
 
-This project implements a simple **AI tutor** designed to help young students understand the basics of coding. It uses OpenAI’s `gpt-4o` API and a modern React-based frontend to deliver clean, lesson-friendly interactions through a dynamic chat interface.
+This project implements the **AI tutor** BEX, designed to help young students understand the basics of coding, robotics, and Arduino. It uses OpenAI’s `gpt-4o` API and a modern React-based frontend to deliver clean, lesson-friendly interactions through a dynamic chat interface. The current plan is for it to be implemented through an IFrame on to Bugbox Playground. To do so, this trimester we have built an URL/Site through Netlify and switched our build command to it.  
 
 ---
 
@@ -17,12 +17,19 @@ This project implements a simple **AI tutor** designed to help young students un
 
 ---
 
+##Repository Structure
+
+This project is split across two repositories due to having to workaround Netlify. Due to being an organization, Redback will have to pay a $2K fine to access Netlify. Thus we have forked it to a personal account and made it public so that multiple people can contribute to the repository and push to Netlify automatically. As it is public, we will need to store an working version of the repository safely, thus we will have to push to both repositories upon completion. 
+-https://github.com/bugboxau/BEX (Repository linked to Netlify)
+-https://github.com/Redback-Operations/redback-bugbox-ai (Private Organization Repository)
+
 ## Prerequisites
 
 Before running the project, ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (v14 or higher)
 - [npm](https://www.npmjs.com/) (included with Node)
 - A valid OpenAI API key (requires paid account)
+- Netlify. Run "npm install Netlify"
 
 ---
 
@@ -66,20 +73,65 @@ touch .env
 - Inside the `.env` file, add your API key:
 
 ```
-VITE_OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 **NOTE: Never commit the `.env` file to a public repository.**
+
+## Linking to the second repository
+
+**This is best done by one person pulling from the main repo after all changes have been made. To fix any merge issues then updating the bugbox repository**
+
+You will need to add this command to the command prompt. I have named it bugbox in my example, but you can name it whatever you like to show it is different to your repository. 
+
+```
+git remote add bugbox https://github.com/bugboxau/BEX.git
+```
+
+You can confirm that the repository is present by typing: 
+
+```
+git remote -v
+```
+
+You will see the repositories you are linked to as such: 
+
+```
+bugbox  https://github.com/bugboxau/BEX.git (fetch)
+bugbox  https://github.com/bugboxau/BEX.git (push)
+origin  https://github.com/Redback-Operations/redback-bugbox-ai.git (fetch)
+origin  https://github.com/Redback-Operations/redback-bugbox-ai.git (push)
+```
+
+Always push as a group to the main organization repository (the one you cloned from) and leave it to one team member to pull these changes and push to the Bugbox repository which is connected to Netlify. 
+
+```
+git add .
+git commit -m "BEX update"
+git push origin bugbox
+```
+
+## Requirements on Netlify
+
+Dylan Nguyen's personal Netlify account is hosting BEX @ https://bex-project-bugbox.netlify.app/ which you can check to see if the pushes have worked. If you have a white screen, consult with Dylan for access to the Netlify Account and changes will have to be made. 
+
+Netlify safely stores your OPEN_API_KEY. It is currently using my API_KEY which will run out after I complete Capstone, when it runs out you can add one by going to:
+
+Deployment Settings -> Environment Variables -> Create new environment variable. 
+
+```
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
 
 ## Running the Application
 
 Assuming that all dependencies have been are installed and your API key is secured in a .env file, to start the development server run the following command:
 
 ```bash
-npm run dev
+netlify dev 
 ```
 
-This will start the app on `http://localhost:5173/` (default Vite port), where you can interact with the ChatGPT AI.
+This will start the app on `http://localhost:5173/` (default Vite port), and 'http://localhost:8888/' (default Netlify Host), where you can interact with the ChatGPT AI.
 
 ---
 
@@ -101,7 +153,7 @@ This will start the app on `http://localhost:5173/` (default Vite port), where y
 - **Environment Configuration**: Make sure your `.env` file contains the following line (do not include quotes):
 
 ```bash
-VITE_OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 - **Shared Project Caution**: This is a collaborative and ongoing project. Contributors should double-check that they:
@@ -118,7 +170,7 @@ VITE_OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 - Implement authentication for user access control.
 - Further optimize the user interface with advanced animations and custom themes.
-- Save and load chat history from local storage.
+- Implement the IFrame in Bugbox Playground upon determining how to proceed with user authentication. 
 - Analytics dashboard for educators (what students ask, where they struggle).
 
 ---
