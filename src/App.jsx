@@ -1,4 +1,5 @@
 import { getOfflineResponse } from './utils/offlineTutor';
+import { courses } from "./utils/courses";
 import BadgeDisplay from './components/BadgeDisplay';
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
@@ -23,6 +24,44 @@ import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
 import { extractText } from './FileProcessor.js';
 
 import ChatHistory from './ChatHistory.jsx';
+const sampleCourse = {
+  id: 'intro-course',
+  title: 'Introduction to Programming',
+  videoId: 'HvMQONnCXbE', // Using your YouTube video
+  questions: [
+    {
+      question: "What is the main topic of this video?",
+      options: [
+        "Learning programming basics",
+        "Cooking recipes", 
+        "Sports techniques",
+        "Music lessons"
+      ],
+      correctAnswer: 0
+    },
+    {
+      question: "Why is programming important according to the video?",
+      options: [
+        "It helps solve problems creatively",
+        "It makes you popular",
+        "It's easy to learn overnight",
+        "It requires no practice"
+      ],
+      correctAnswer: 0
+    },
+    {
+      question: "What should you do after watching this video?",
+      options: [
+        "Practice what you learned",
+        "Forget everything",
+        "Watch more videos without practicing",
+        "Skip to advanced topics"
+      ],
+      correctAnswer: 0
+    }
+  ],
+  badge: "Programming Beginner"
+};
 
 // === Config ===
 const API_KEY = import.meta.env.OPENAI_API_KEY;
@@ -78,6 +117,12 @@ export default function App() {
   const [inputValue, setInputValue] = useState('');
   const [showBadges, setShowBadges] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [courseFlow, setCourseFlow] = useState({
+  active: false,
+  stage: 'welcome', // 'welcome', 'video', 'quiz', 'badge'
+  currentCourse: null,
+  earnedBadges: []
+});
 
   // Onboarding
   const [showModal, setShowModal] = useState(true);
@@ -145,6 +190,167 @@ const fileToDataURL = (file) =>
     setActiveMessages([greeting()]);
     setShowModal(true);
   };
+  const startCourse = () => {
+  setCourseFlow({
+    active: true,
+    stage: 'video',
+    currentCourse: sampleCourse,
+    earnedBadges: []
+  });
+};
+
+const completeVideo = () => {
+  setCourseFlow(prev => ({ ...prev, stage: 'quiz' }));
+};
+
+const completeQuiz = (success) => {
+  if (success) {
+    setCourseFlow(prev => ({
+      ...prev,
+      stage: 'badge',
+      earnedBadges: [...prev.earnedBadges, sampleCourse.badge]
+    }));
+  }
+};
+
+const closeCourse = () => {
+  setCourseFlow({ active: false, stage: 'welcome', currentCourse: null, earnedBadges: [] });
+};
+
+
+const CourseWelcome = ({ onStartCourse }) => (
+  <div className="course-welcome">
+    <h2>Welcome to Your First Course! 🎓</h2>
+    <p>Get ready to learn programming! This course includes:</p>
+    <ul>
+      <li>📹 An educational video about programming</li>
+      <li>❓ A quick quiz to test your knowledge</li>
+      <li>🏆 A digital badge upon completion</li>
+    </ul>
+    <button className="start-course-btn" onClick={onStartCourse}>
+      Let's Begin!
+    </button>
+  </div>
+);
+
+const VideoPlayer = ({ videoId, onVideoComplete }) => {
+  const [videoEnded, setVideoEnded] = useState(false);
+
+  return (
+    <div className="video-section">
+      <h3>Watch this programming tutorial:</h3>
+      <div className="video-container">
+        <iframe
+          width="560"
+          height="315"
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title="Programming Tutorial"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          onEnded={() => setVideoEnded(true)}
+        ></iframe>
+      </div>
+      {videoEnded && (
+        <button className="continue-btn" onClick={onVideoComplete}>
+          Continue to Quiz ➡️
+        </button>
+      )}
+    </div>
+  );
+};
+
+const QuizComponent = ({ questions, onQuizComplete }) => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState([]);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+
+  const handleAnswerSelect = (answerIndex) => {
+    const newAnswers = [...selectedAnswers];
+    newAnswers[currentQuestion] = answerIndex;
+    setSelectedAnswers(newAnswers);
+
+    if (currentQuestion < questions.length - 1) {
+      setTimeout(() => setCurrentQuestion(currentQuestion + 1), 500);
+    } else {
+      setQuizCompleted(true);
+    }
+  };
+
+  const calculateScore = () => {
+    return questions.reduce((score, question, index) => {
+      return score + (selectedAnswers[index] === question.correctAnswer ? 1 : 0);
+    }, 0);
+  };
+
+  if (quizCompleted) {
+    const score = calculateScore();
+    const passed = score >= questions.length * 0.7;
+
+    return (
+      <div className="quiz-results">
+        <h3>Quiz Complete! 🎉</h3>
+        <p>Your score: {score} out of {questions.length}</p>
+        {passed ? (
+          <div className="success-message">
+            <p>Congratulations! You passed! 🏆</p>
+            <button className="get-badge-btn" onClick={() => onQuizComplete(true)}>
+              Claim Your Badge! 🎓
+            </button>
+          </div>
+        ) : (
+          <div className="retry-message">
+            <p>Don't worry! You can try again.</p>
+            <button onClick={() => {
+              setCurrentQuestion(0);
+              setSelectedAnswers([]);
+              setQuizCompleted(false);
+            }}>
+              Try Again 🔄
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const question = questions[currentQuestion];
+
+  return (
+    <div className="quiz-section">
+      <h3>Question {currentQuestion + 1} of {questions.length}</h3>
+      <div className="question-card">
+        <p className="question-text">{question.question}</p>
+        <div className="answer-options">
+          {question.options.map((option, index) => (
+            <button
+              key={index}
+              className={`answer-btn ${selectedAnswers[currentQuestion] === index ? 'selected' : ''}`}
+              onClick={() => handleAnswerSelect(index)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BadgeAward = ({ badgeName, onClose }) => (
+  <div className="badge-award">
+    <div className="badge-animation">✨</div>
+    <h2>Congratulations! 🎓</h2>
+    <p>You've earned the <strong>{badgeName}</strong> badge!</p>
+    <div className="badge-image">
+      <div className="badge-icon">🏆</div>
+    </div>
+    <button className="close-badge-btn" onClick={onClose}>
+      Continue Learning
+    </button>
+  </div>
+);
+
 
   // ---- File upload ----
   const handleFileUpload = (event) => {
@@ -461,21 +667,37 @@ const processUploadedFile = async (file) => {
           </div>
   
         {/* header row: left = Reset, right = Show Badges */}
-        {!showModal && (
-          <div className="chat-header">
-            <button onClick={resetStudentInfo} style={{ backgroundColor: "var(--bugbox-dark-gray)" }}>
-              Reset Student Info
-            </button>
+        {!showModal && !courseFlow.active && (
+  <div className="chat-header">
+    <button onClick={resetStudentInfo} style={{ backgroundColor: "var(--bugbox-dark-gray)" }}>
+      Reset Student Info
+    </button>
 
-            <button
-              onClick={() => setShowBadges((v) => !v)}
-              className="show-badges-btn"
-              style={{ backgroundColor: "var(--bugbox-dark-gray)", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer" }}
-            >
-              {showBadges ? "Hide Badges" : "Show Badges"}
-            </button>
-          </div>
-        )}
+    <button
+      onClick={startCourse}
+      className="start-course-btn"
+      style={{ 
+        backgroundColor: "var(--bugbox-green)", 
+        color: "white", 
+        padding: "10px 20px", 
+        borderRadius: "8px", 
+        border: "none", 
+        cursor: "pointer",
+        margin: "0 10px"
+      }}
+    >
+      Start Course 🎓
+    </button>
+
+    <button
+      onClick={() => setShowBadges((v) => !v)}
+      className="show-badges-btn"
+      style={{ backgroundColor: "var(--bugbox-dark-gray)", color: "white", padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer" }}
+    >
+      {showBadges ? "Hide Badges" : "Show Badges"}
+    </button>
+  </div>
+)}
 
         {showBadges && !showModal && (
         <div className="badges-holder">
@@ -565,85 +787,123 @@ const processUploadedFile = async (file) => {
   </div>
 )}
 
-        {/* Chat area */}
-          {!showModal && (
-            <div className="chat-wrapper">
-              <div className="chat-fullbleed">
-                <MainContainer>
-                  <ChatContainer>
-                    <MessageList
-                      scrollBehavior="smooth"
-                      typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
-                    >
-                      {messages.map((message, i) => (
-                        <Message
-                          key={i}
-                          model={{
-                            ...message,
-                            position: "single",
-                            className: message.sender === "user" ? "user-message" : "chatgpt-message",
-                            avatar: message.avatar,
-                          }}
-                        >
-                          <Message.CustomContent>
-                            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                              {message.message}
-                            </ReactMarkdown>
-                          </Message.CustomContent>
-                        </Message>
-                      ))}
-                    </MessageList>
+        {/* Course Flow Area */}
+{courseFlow.active && (
+  <div className="course-flow-container">
+    <button 
+      className="back-to-chat-btn"
+      onClick={closeCourse}
+      style={{ marginBottom: '20px', backgroundColor: "var(--bugbox-dark-gray)", color: "white", padding: "8px 16px", border: "none", borderRadius: "4px", cursor: "pointer" }}
+    >
+      ← Back to Chat
+    </button>
 
-                    <MessageInput
-                      placeholder="Type your message here..."
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e)}
-                      onSend={(msg) => handleSend(msg)}
-                      attachButton={false}
-                    />
+    {courseFlow.stage === 'welcome' && (
+      <CourseWelcome onStartCourse={() => setCourseFlow(prev => ({ ...prev, stage: 'video' }))} />
+    )}
+
+    {courseFlow.stage === 'video' && courseFlow.currentCourse && (
+      <VideoPlayer 
+        videoId={courseFlow.currentCourse.videoId}
+        onVideoComplete={completeVideo}
+      />
+    )}
+
+    {courseFlow.stage === 'quiz' && courseFlow.currentCourse && (
+      <QuizComponent 
+        questions={courseFlow.currentCourse.questions}
+        onQuizComplete={completeQuiz}
+      />
+    )}
+
+    {courseFlow.stage === 'badge' && courseFlow.currentCourse && (
+      <BadgeAward 
+        badgeName={courseFlow.currentCourse.badge}
+        onClose={closeCourse}
+      />
+    )}
+  </div>
+)}
+
+{/* Chat area - Only show when course is not active */}
+{!showModal && !courseFlow.active && (
+  <div className="chat-wrapper">
+    <div className="chat-fullbleed">
+      <MainContainer>
+        <ChatContainer>
+          <MessageList
+            scrollBehavior="smooth"
+            typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
+          >
+            {messages.map((message, i) => (
+              <Message
+                key={i}
+                model={{
+                  ...message,
+                  position: "single",
+                  className: message.sender === "user" ? "user-message" : "chatgpt-message",
+                  avatar: message.avatar,
+                }}
+              >
+                <Message.CustomContent>
+                  <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                    {message.message}
+                  </ReactMarkdown>
+                </Message.CustomContent>
+              </Message>
+            ))}
+          </MessageList>
+
+          <MessageInput
+            placeholder="Type your message here..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e)}
+            onSend={(msg) => handleSend(msg)}
+            attachButton={false}
+          />
 
                     <InputToolbox>
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById("file-upload").click()}
-                        className="upload-button"
-                      >
-                        📎 Upload File
-                      </button>
-                      <input
-                        id="file-upload"
-                        type="file"
-                        accept=".pdf,image/*"
-                        onChange={handleFileUpload}
-                        style={{ display: "none" }}
-                      />
+            <button
+              type="button"
+              onClick={() => document.getElementById("file-upload").click()}
+              className="upload-button"
+            >
+              📎 Upload File
+            </button>
+            <input
+              id="file-upload"
+              type="file"
+              accept=".pdf,image/*"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
+            />
 
-                      {/* Hint button */}
-                      <button
-                        type="button"
-                        onClick={handleHintRequest}
-                        className="upload-button"
-                        style={{ marginLeft: '10px' }}
-                      >
-                        💡 Hint
-                      </button>
-                    </InputToolbox>
-                  </ChatContainer>
-                </MainContainer>
-              </div>
+            {/* Hint button */}
+            <button
+              type="button"
+              onClick={handleHintRequest}
+              className="upload-button"
+              style={{ marginLeft: '10px' }}
+            >
+              💡 Hint
+            </button>
+          </InputToolbox>
+        </ChatContainer>
+      </MainContainer>
+    </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "20px",
-                  width: "100%",
-                  padding: "20px",
-                }}
-              />
-            </div>
-            )}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "20px",
+        width: "100%",
+        padding: "20px",
+      }}
+    />
+  </div>
+)}
         </div>
       </div>
     </div>

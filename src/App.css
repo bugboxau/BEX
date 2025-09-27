@@ -555,5 +555,244 @@ html, body, #root { height: 100vh; margin: 0; overflow: hidden; }
   overflow: hidden;
 }
 
+/* ===== Course Flow Styles ===== */
+.course-flow-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
 
+.course-welcome {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin: 20px 0;
+  color: #1a1a1a;
+}
+
+.start-course-btn {
+  background: var(--bugbox-orange);
+  color: white;
+  padding: 15px 30px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.25s;
+}
+
+.start-course-btn:hover {
+  background: #e0480f;
+}
+
+.video-section {
+  text-align: center;
+  color: #1a1a1a;
+}
+
+.video-container {
+  margin: 20px 0;
+}
+
+.video-container iframe {
+  border-radius: 8px;
+  max-width: 100%;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.continue-btn {
+  background: var(--bugbox-orange);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.25s;
+}
+
+.continue-btn:hover {
+  background: #e0480f;
+}
+
+.quiz-section {
+  max-width: 600px;
+  margin: 0 auto;
+  color: #1a1a1a;
+}
+
+.question-card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin: 20px 0;
+}
+
+.question-text {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.answer-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.answer-btn {
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #1a1a1a;
+  font-size: 16px;
+}
+
+.answer-btn:hover {
+  border-color: var(--bugbox-orange);
+}
+
+.answer-btn.selected {
+  background: var(--bugbox-orange);
+  color: white;
+  border-color: var(--bugbox-orange);
+}
+
+.quiz-results {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  color: #1a1a1a;
+}
+
+.success-message {
+  color: #28a745;
+}
+
+.retry-message {
+  color: #dc3545;
+}
+
+.get-badge-btn {
+  background: var(--bugbox-orange);
+  color: white;
+  padding: 15px 30px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.25s;
+}
+
+.get-badge-btn:hover {
+  background: #e0480f;
+}
+
+.badge-award {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  color: #1a1a1a;
+}
+
+.badge-animation {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.badge-icon {
+  font-size: 80px;
+  margin: 20px 0;
+}
+
+.close-badge-btn {
+  background: var(--bugbox-orange);
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.close-badge-btn:hover {
+  background: #e0480f;
+}
+
+.back-to-chat-btn {
+  background: #6c757d;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.back-to-chat-btn:hover {
+  background: #5a6268;
+}
+
+/* Course header button in chat */
+.start-course-header-btn {
+  background: var(--bugbox-orange) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  margin: 0 10px !important;
+  transition: background-color 0.25s !important;
+}
+
+.start-course-header-btn:hover {
+  background: #e0480f !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .course-flow-container {
+    padding: 10px;
+  }
+  
+  .video-container iframe {
+    width: 100%;
+    height: 300px;
+  }
+  
+  .question-card {
+    padding: 20px;
+  }
+  
+  .course-welcome {
+    padding: 30px 15px;
+  }
+}
+
+/* Ensure course flow takes full height */
+.course-flow-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix for dark/light mode consistency */
+.course-flow-container * {
+  color: #1a1a1a;
+}
 
