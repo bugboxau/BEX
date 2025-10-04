@@ -24,6 +24,8 @@ import { extractTextFromPDF, extractTextFromImage } from './FileProcessor';
 import { extractText } from './FileProcessor.js';
 
 import ChatHistory from './ChatHistory.jsx';
+import ProgressBar from './components/ProgressBar';
+import useCourseProgress from './hooks/useCourseProgress';
 
 // === NEW: Certificate Data ===
 // === NEW: Certificate Data ===
@@ -77,7 +79,13 @@ const certificateData = [
 const sampleCourse = {
   id: 'intro-course',
   title: 'Introduction to Programming',
-  videoId: 'HvMQONnCXbE', // Using your YouTube video
+  videoId: 'HvMQONnCXbE',
+  steps: [
+    { id: 'welcome', type: 'welcome', title: 'Course Welcome' },
+    { id: 'video', type: 'video', title: 'Learning Video' },
+    { id: 'quiz', type: 'quiz', title: 'Knowledge Check' },
+    { id: 'badge', type: 'badge', title: 'Earn Badge' }
+  ],
   questions: [
     {
       question: "What is the main topic of this video?",
@@ -175,6 +183,7 @@ export default function App() {
 });
 
 const [selectedCertificate, setSelectedCertificate] = useState(null);
+const [selectedCourseId, setSelectedCourseId] = useState('intro-course');
 const [showCertificateModal, setShowCertificateModal] = useState(false);
 
   // Onboarding
@@ -196,6 +205,8 @@ const fileToDataURL = (file) =>
     r.onerror = reject;
     r.readAsDataURL(file);
   });
+
+  const { progress, markStepCompleted } = useCourseProgress(selectedCourseId);
 
 
 
@@ -243,25 +254,40 @@ const fileToDataURL = (file) =>
     setActiveMessages([greeting()]);
     setShowModal(true);
   };
-  const startCourse = () => {
+  const startCourse = (courseId = 'intro-course') => {
+  const course = courses.find(c => c.id === courseId) || sampleCourse;
+  setSelectedCourseId(courseId);
   setCourseFlow({
     active: true,
     stage: 'video',
-    currentCourse: sampleCourse,
+    currentCourse: course,
     earnedBadges: []
   });
 };
 
+const completeWelcome = () => {
+  if (courseFlow.currentCourse) {
+    markStepCompleted('welcome', courseFlow.currentCourse.steps.length);
+  }
+  setCourseFlow(prev => ({ ...prev, stage: 'video' }));
+};
+
 const completeVideo = () => {
+  if (courseFlow.currentCourse) {
+    markStepCompleted('video', courseFlow.currentCourse.steps.length);
+  }
   setCourseFlow(prev => ({ ...prev, stage: 'quiz' }));
 };
 
 const completeQuiz = (success) => {
   if (success) {
+    if (courseFlow.currentCourse) {
+      markStepCompleted('quiz', courseFlow.currentCourse.steps.length);
+    }
     setCourseFlow(prev => ({
       ...prev,
       stage: 'badge',
-      earnedBadges: [...prev.earnedBadges, sampleCourse.badge]
+      earnedBadges: [...prev.earnedBadges, courseFlow.currentCourse.badge]
     }));
   }
 };
@@ -278,8 +304,11 @@ const handleBadgeClick = (badgeName) => {
   }
 };
 
-const CourseWelcome = ({ onStartCourse }) => (
+const CourseWelcome = ({ onStartCourse, progress }) => (
   <div className="course-welcome">
+    <div className="mb-6">
+      <ProgressBar progress={progress} label="Overall Progress" color="blue" />
+    </div>
     <h2>Welcome to Your First Course! 🎓</h2>
     <p>Get ready to learn programming! This course includes:</p>
     <ul>
@@ -896,16 +925,28 @@ const processUploadedFile = async (file) => {
         {/* Course Flow Area */}
 {courseFlow.active && (
   <div className="course-flow-container">
-    <button 
-      className="back-to-chat-btn"
-      onClick={closeCourse}
-      style={{ marginBottom: '20px', backgroundColor: "var(--bugbox-dark-gray)", color: "white", padding: "8px 16px", border: "none", borderRadius: "4px", cursor: "pointer" }}
-    >
-      ← Back to Chat
-    </button>
+    <div className="flex justify-between items-center mb-4">
+      <button 
+        className="back-to-chat-btn"
+        onClick={closeCourse}
+        style={{ marginBottom: '20px', backgroundColor: "var(--bugbox-dark-gray)", color: "white", padding: "8px 16px", border: "none", borderRadius: "4px", cursor: "pointer" }}
+      >
+        ← Back to Chat
+      </button>
+      <div className="w-64">
+        <ProgressBar 
+          progress={progress} 
+          label={`${courseFlow.currentCourse?.title} Progress`}
+          color="green"
+        />
+      </div>
+    </div>
 
     {courseFlow.stage === 'welcome' && (
-      <CourseWelcome onStartCourse={() => setCourseFlow(prev => ({ ...prev, stage: 'video' }))} />
+      <CourseWelcome 
+        onStartCourse={completeWelcome}
+        progress={progress}
+      />
     )}
 
     {courseFlow.stage === 'video' && courseFlow.currentCourse && (
