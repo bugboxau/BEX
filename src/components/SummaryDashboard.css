@@ -1,0 +1,72 @@
+.summary-dashboard {
+  background: var(--card-bg, white);
+  color: var(--card-text, #333333);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 15px 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.summary-dashboard h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  color: var(--text-primary, #333333);
+  text-align: center;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.summary-card {
+  background: var(--bg-secondary, #f5f7fa);
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  border: 1px solid var(--border-color, #e0e0e0);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--bugbox-orange, #ff5412);
+  margin-bottom: 4px;
+}
+
+.card-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666666);
+  font-weight: 500;
+}
+
+.student-greeting {
+  text-align: center;
+  font-style: italic;
+  color: var(--text-secondary, #666666);
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .summary-dashboard {
+  background: var(--card-bg, #2d2d2d);
+}
+
+[data-theme="dark"] .summary-card {
+  background: var(--bg-secondary, #1a1a1a);
+}

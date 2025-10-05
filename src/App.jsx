@@ -26,6 +26,10 @@ import { extractText } from './FileProcessor.js';
 import ChatHistory from './ChatHistory.jsx';
 import ProgressBar from './components/ProgressBar';
 import useCourseProgress from './hooks/useCourseProgress';
+import QuizComponent from './components/QuizComponent';
+import IndependentQuiz from './components/IndependentQuiz';
+import quizData from './components/quizData.jsx'; 
+
 
 // === NEW: Certificate Data ===
 // === NEW: Certificate Data ===
@@ -79,13 +83,20 @@ const certificateData = [
 const sampleCourse = {
   id: 'intro-course',
   title: 'Introduction to Programming',
-  videoId: 'HvMQONnCXbE',
+  videos: [
+    { id: 'vid1', title: 'Basic Robotics', videoId: 'HvMQONnCXbE' },
+    { id: 'vid2', title: 'Simple Programming', videoId: 'YrJi_4yc6_c' },
+    { id: 'vid3', title: 'Building Robots', videoId: 'xbyEP0M9w7k' },
+    { id: 'vid4', title: 'The quiz', videoId: 'RVPhyG0AZFY' }
+  ],
+  
   steps: [
     { id: 'welcome', type: 'welcome', title: 'Course Welcome' },
     { id: 'video', type: 'video', title: 'Learning Video' },
     { id: 'quiz', type: 'quiz', title: 'Knowledge Check' },
     { id: 'badge', type: 'badge', title: 'Earn Badge' }
   ],
+  
   questions: [
     {
       question: "What is the main topic of this video?",
@@ -166,7 +177,7 @@ export default function App() {
     }));
   };
 
-  // ---- UI state (unchanged from your app) ----
+  // ---- UI state 
   const [uploadedFile, setUploadedFile] = useState(null);
   const [pendingFileContent, setPendingFileContent] = useState('');
   const [uploadFileName, setUploadFileName] = useState('');
@@ -175,6 +186,7 @@ export default function App() {
   const [inputValue, setInputValue] = useState('');
   const [showBadges, setShowBadges] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showQuiz, setShowQuiz] = useState(false);
   const [courseFlow, setCourseFlow] = useState({
   active: false,
   stage: 'welcome', // 'welcome', 'video', 'quiz', 'badge'
@@ -185,12 +197,25 @@ export default function App() {
 const [selectedCertificate, setSelectedCertificate] = useState(null);
 const [selectedCourseId, setSelectedCourseId] = useState('intro-course');
 const [showCertificateModal, setShowCertificateModal] = useState(false);
+const [darkMode, setDarkMode] = useState(() => {
+  const savedTheme = localStorage.getItem('theme');
+  return savedTheme ? savedTheme === 'dark' : false;
+});
+const toggleDarkMode = () => {
+  setDarkMode(!darkMode);
+};
+useEffect(() => {
+  const currentTheme = darkMode ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  localStorage.setItem('theme', currentTheme);
+}, [darkMode]);
 
   // Onboarding
   const [showModal, setShowModal] = useState(true);
   const [studentName, setStudentName] = useState('');
   const [studentAge, setStudentAge] = useState('');
   const [studentLesson, setStudentLesson] = useState('');
+  
   // Agreements (new) – keep these OUTSIDE of JSX
   const [agreeRespect, setAgreeRespect] = useState(false);
   const [agreeFocus, setAgreeFocus]   = useState(false);
@@ -359,6 +384,7 @@ const QuizComponent = ({ questions, onQuizComplete }) => {
     newAnswers[currentQuestion] = answerIndex;
     setSelectedAnswers(newAnswers);
 
+    // Auto-advance to next question after selection
     if (currentQuestion < questions.length - 1) {
       setTimeout(() => setCurrentQuestion(currentQuestion + 1), 500);
     } else {
@@ -374,7 +400,7 @@ const QuizComponent = ({ questions, onQuizComplete }) => {
 
   if (quizCompleted) {
     const score = calculateScore();
-    const passed = score >= questions.length * 0.7;
+    const passed = score >= questions.length * 0.7; // 70% to pass
 
     return (
       <div className="quiz-results">
@@ -383,7 +409,10 @@ const QuizComponent = ({ questions, onQuizComplete }) => {
         {passed ? (
           <div className="success-message">
             <p>Congratulations! You passed! 🏆</p>
-            <button className="get-badge-btn" onClick={() => onQuizComplete(true)}>
+            <button 
+              className="get-badge-btn" 
+              onClick={() => onQuizComplete(true)}
+            >
               Claim Your Badge! 🎓
             </button>
           </div>
@@ -806,11 +835,28 @@ const processUploadedFile = async (file) => {
       Reset Student Info
     </button>
 
+ 
+<button
+      onClick={toggleDarkMode}
+      className="theme-toggle-btn"
+      style={{ 
+        backgroundColor: "transparent", 
+        color: "inherit", 
+        padding: "8px 12px", 
+        borderRadius: "8px", 
+        border: "1px solid currentColor", 
+        cursor: "pointer",
+        margin: "0 10px",
+        fontSize: "1.2rem"
+      }}
+    >
+      {darkMode ? '☀️' : '🌙'}
+    </button>
     <button
       onClick={startCourse}
       className="start-course-btn"
       style={{ 
-        backgroundColor: "var(--bugbox-green)", 
+        backgroundColor: "#1f1f1f", 
         color: "white", 
         padding: "10px 20px", 
         borderRadius: "8px", 
@@ -819,8 +865,23 @@ const processUploadedFile = async (file) => {
         margin: "0 10px"
       }}
     >
-      Start Course 🎓
+      Start Course 
     </button>
+
+    <button
+  onClick={() => setShowQuiz((v) => !v)}
+  className="take-quiz-btn"
+  style={{ backgroundColor: "#1f1f1f", 
+        color: "white", 
+        padding: "10px 20px", 
+        borderRadius: "8px", 
+        border: "none", 
+        cursor: "pointer",
+        margin: "0 10px" }}
+>
+  Take Quiz 
+</button>
+
 
     <button
       onClick={() => setShowBadges((v) => !v)}
@@ -949,12 +1010,22 @@ const processUploadedFile = async (file) => {
       />
     )}
 
-    {courseFlow.stage === 'video' && courseFlow.currentCourse && (
-      <VideoPlayer 
-        videoId={courseFlow.currentCourse.videoId}
-        onVideoComplete={completeVideo}
-      />
-    )}
+    <div className="video-list max-h-96 overflow-y-auto">
+  {sampleCourse.videos.map((vid) => (
+    <div key={vid.id} className="video-item p-2 border-b">
+      <h3>{vid.title}</h3>
+      <iframe
+        width="100%"
+        height="200"
+        src={`https://www.youtube.com/embed/${vid.videoId}`}
+        title={vid.title}
+        frameBorder="0"
+        allowFullScreen
+      ></iframe>
+    </div>
+  ))}
+</div>
+
 
     {courseFlow.stage === 'quiz' && courseFlow.currentCourse && (
       <QuizComponent 
@@ -1053,6 +1124,7 @@ const processUploadedFile = async (file) => {
 )}
         </div>
       </div>
+      {showQuiz && <IndependentQuiz />}
     </div>
   );  
 }
