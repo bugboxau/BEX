@@ -1,57 +1,82 @@
-:root {
-  --bugbox-orange: #ff5412;
-  --bugbox-secondary: #12bdff;
-  --bugbox-light-gray: #f2f2f2;
-  --bugbox-dark-gray: #333;
-}
+/* === Chat scope — theme-driven, no local :root overrides === */
 
-/* === USER (Outgoing) MESSAGE === */
+/* USER (Outgoing) */
 .cs-message--outgoing .cs-message__content {
-  background-color: var(--bugbox-orange) !important;
-  color: white !important;
+  background-color: var(--chat-user-bg) !important;
+  color: var(--chat-user-text) !important;
   border-radius: 12px !important;
 }
 
-/* === CHATGPT (Incoming) MESSAGE === */
+/* CHATGPT (Incoming) – higher contrast + outline + shadow */
 .cs-message--incoming .cs-message__content {
-  background-color: var(--bugbox-secondary) !important;
-  color: white !important;
+  background-color: var(--chat-ai-bg) !important;
+  color: var(--chat-ai-text) !important;
   border-radius: 12px !important;
+  border: 1px solid var(--chat-ai-border) !important;  /* NEW */
+  box-shadow: var(--bubble-shadow) !important;          /* NEW */
 }
 
-/* === MESSAGE INPUT FIELD === */
-.cs-message-input__content-editor {
-  background-color: var(--bugbox-light-gray) !important;
-  color: var(--bugbox-dark-gray) !important;
-  border: 1px solid var(--bugbox-secondary) !important; /* Keep a clean border */
-  border-radius: 12px !important; /* Ensure rounded corners */
-  padding: 10px !important; /* Reduce padding */
-  font-size: 0.9rem !important; /* Reduce font size */
-  box-shadow: none !important; /* Remove any shadow */
-  width: 100% !important; /* Ensure it spans the full width of the container */
-  height: 40px !important; /* Reduce height */
-  overflow: hidden !important; /* Prevent content from overflowing */
-  box-sizing: border-box !important; /* Ensure padding and border are included in size */
+/* Ensure text inside markdown respects contrast */
+.chatgpt-message p,
+.chatgpt-message li,
+.chatgpt-message span,
+.chatgpt-message strong,
+.chatgpt-message em {
+  color: var(--chat-ai-text) !important;
 }
 
-.cs-message-input__content-editor::placeholder {
+/* Code blocks in dark mode: clearer background and border */
+[data-theme="dark"] .cs-message__content pre,
+[data-theme="dark"] .cs-message__content code {
+  background: #262a2e !important;
+  color: #e8eaed !important;
+  border: 1px solid #3b4046 !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+}
+
+/* Links inside AI bubbles: keep them visible */
+.chatgpt-message a {
+  color: var(--bugbox-orange) !important;
+  text-decoration: underline;
+}
+.chatgpt-message a:hover {
   color: var(--bugbox-secondary) !important;
 }
 
-.cs-message-input__content-editor:focus {
-  outline: none !important; /* Remove focus outline */
-  box-shadow: none !important; /* Remove focus shadow */
-  border: none !important;
+/* MESSAGE INPUT FIELD */
+.cs-message-input__content-editor {
+  background-color: var(--header-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+  font-size: 0.9rem !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  height: 40px !important;
+  overflow: hidden !important;
 }
 
-/* === ENTIRE INPUT BAR === */
+.cs-message-input__content-editor::placeholder {
+  color: var(--text-color) !important;
+  opacity: .6;
+}
+
+.cs-message-input__content-editor:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* === ENTIRE INPUT BAR (brand accent kept) === */
 .cs-message-input {
   background-color: var(--bugbox-orange) !important;
   border-top: 1px solid var(--bugbox-secondary) !important;
   color: white !important;
-  display: flex; /* Use flexbox for alignment */
-  align-items: center; /* Vertically align items */
-  padding: 5px 10px !important; /* Adjust padding for proper spacing */
+  display: flex;
+  align-items: center;
+  padding: 5px 10px !important;
   border-radius: 12px !important;
 }
 
@@ -59,132 +84,137 @@
 .cs-button.cs-button--send {
   background-color: var(--bugbox-orange) !important;
   color: white !important;
-  border-radius: 50% !important; /* Make the button circular */
-  margin-left: 10px; /* Add spacing between the input field and the button */
-  height: 40px; /* Match the height of the input field */
-  width: 40px; /* Make the button square */
-  display: flex; /* Center the icon inside the button */
+  border-radius: 50% !important;
+  margin-left: 10px;
+  height: 40px;
+  width: 40px;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .cs-button.cs-button--send:hover {
-  background-color: #000000 !important; /* Change to blue */
+  background-color: #000000 !important;
   color: white !important;
 }
 
 /* === SEND ICON COLOR FIX === */
 .cs-button--send svg {
-  fill: var(--bugbox-secondary) !important; /* Use the secondary color to make it pop */
-  transition: transform 0.2s ease, fill 0.2s ease; /* Add smooth transitions */
+  fill: var(--bugbox-secondary) !important;
+  transition: transform 0.2s ease, fill 0.2s ease;
 }
 
 .cs-button--send:hover svg {
-  fill: var(--bugbox-orange) !important; /* Change to orange on hover */
-  transform: scale(1.3); /* Slightly enlarge the icon on hover */
-  filter: drop-shadow(0 0 5px var(--bugbox-orange)); /* Add a glowing effect */
+  fill: var(--bugbox-orange) !important;
+  transform: scale(1.3);
+  filter: drop-shadow(0 0 5px var(--bugbox-orange));
 }
 
-/* === CHAT BACKGROUND === */
+/* === CHAT BACKGROUND & CONTAINERS (theme variables) === */
 .chat-container {
-  background-color: var(--bugbox-light-gray);
+  background-color: var(--card-bg) !important;
+  color: var(--card-text) !important;
   padding: 20px;
-  border: 2px solid var(--bugbox-secondary); /* Add a small border */
-  border-radius: 12px; /* Keep the corners rounded */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for depth */
+  border: 2px solid var(--border-color) !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cs-main-container,
+.cs-chat-container,
+.cs-message-list,
+.cs-input-toolbox {
+  background-color: var(--card-bg) !important;
+  color: var(--card-text) !important;
 }
 
 /* Remove blue glow and outline from the wrapper */
 .cs-message-input__content-editor-wrapper {
   outline: none !important;
   box-shadow: none !important;
-  border: none !important; /* Remove any borders */
-  background-color: transparent !important; /* Ensure no background color is applied */
-  border-radius: 12px !important; /* Ensure wrapper matches the input field */
-  overflow: hidden !important; /* Prevent content from overflowing */
-  box-sizing: border-box !important; /* Ensure proper sizing */
+  border: none !important;
+  background-color: transparent !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }
 
 .cs-message-input__content-editor-wrapper:focus,
 .cs-message-input__content-editor-wrapper:focus-within {
   outline: none !important;
   box-shadow: none !important;
-  border: none !important; /* Ensure no borders are applied on focus */
+  border: none !important;
 }
 
 /* Fix square corners for the scrollbar container */
 .scrollbar-container.cs-message-input__content-editor-container {
-  border-radius: 12px !important; /* Match the input field's rounded corners */
-  box-shadow: none !important; /* Remove any shadow */
-  border: none !important; /* Remove any border */
-  background-color: transparent !important; /* Ensure no background color */
-  overflow: hidden !important; /* Prevent content from overflowing */
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  overflow: hidden !important;
 }
 
-/* Style the main App container */
+/* Style the main App container (theme background, keep brand border) */
 .App {
-  position: relative; /* Make the .App container the reference point for absolute positioning */
-  border: 4px solid var(--bugbox-orange); /* Add an orange border */
-  border-radius: 16px; /* Make the border rounded */
-  padding: 90px 20px 0 20px; /* Add extra padding at the top for the logo */
-  background-color: var(--bugbox-light-gray); /* Optional: Set a background color */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for depth */
+  position: relative;
+  border: 4px solid var(--bugbox-orange);
+  border-radius: 16px;
+  padding: 90px 20px 0 20px;
+  background-color: var(--bg-color) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Chatscope frame card look */
 .cs-main-container {
-  background-color: var(--bugbox-light-gray);
   padding: 10px;
-  border: 2px solid var(--bugbox-secondary); /* Add a small border */
-  border-radius: 16px; /* Add rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for depth */
-  overflow: hidden; /* Ensure content stays within the rounded corners */
+  border: 2px solid var(--border-color) !important;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-/* Style the logo container */
+/* Logo container */
 .bugbox-logo-container {
-  position: absolute; /* Position the logo relative to the .App container */
-  top: 1px; /* Position the logo 10px from the top of the .App container */
-  left: 50%; /* Center the logo horizontally */
-  transform: translateX(-50%); /* Adjust for the logo's width to perfectly center it */
-  z-index: 10; /* Ensure the logo is above other elements inside the container */
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
 }
 
-/* Style the logo image */
 .bugbox-logo {
-  width: 250px; /* Increase the size of the logo */
-  height: auto; /* Maintain the aspect ratio */
-  border-radius: 8px; /* Optional: Add rounded corners */
+  width: 250px;
+  height: auto;
+  border-radius: 8px;
 }
 
 /* === MARKDOWN CODE BLOCK SUPPORT === */
-/* Prevent long lines in code blocks from overflowing */
 .cs-message__content pre {
-  white-space: pre-wrap !important; /* Allow wrapping in <pre> */
-  word-break: break-word;           /* Break long strings if needed */
-  overflow-x: auto;                 /* Add horizontal scroll if really needed */
+  white-space: pre-wrap !important;
+  word-break: break-word;
+  overflow-x: auto;
 }
 
 /* === CHAT BUBBLE TEXT ALIGNMENT & PADDING === */
 .cs-message__content {
-  text-align: left !important;        /* Align text to the left for better readability */
-  padding-top: 1px !important;        /* Trim top padding to reduce empty space */
-  padding-bottom: 1px !important;     /* Trim bottom padding similarly */
+  text-align: left !important;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
 }
 
 /* === MESSAGE SPACING === */
-/* Reduce space between message bubbles */
 .cs-message-list__scroll-wrapper {
-  row-gap: 4px !important; /* Tighter vertical spacing between messages */
+  row-gap: 4px !important;
 }
 
-/* Ensure chat grid always shows full height, input visible */
+/* Grid fill rules */
 .chat-fullbleed {
-  height: 100%;          /* fill parent */
+  height: 100%;
   display: grid;
-  grid-template-rows: 1fr auto; /* messages grow, input fixed */
+  grid-template-rows: 1fr auto;
 }
 
-/* Messages should scroll, not cut off */
 .chat-fullbleed .cs-message-list {
   min-height: 0 !important;
   flex: 1 1 auto !important;
@@ -193,9 +223,140 @@
 
 /* Hint button specific tweaks */
 .upload-button.hint-button {
-  background-color: var(--bugbox-secondary); /* Blue for contrast */
+  background-color: var(--bugbox-secondary);
 }
- 
 .upload-button.hint-button:hover {
-  background-color: #0a9de0; /* Darker blue */
+  background-color: #0a9de0;
+}
+
+/* Layout + size resets (unchanged, but theme-friendly) */
+.cs-main-container,
+.cs-chat-container {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.cs-message-list {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cs-chat-container {
+  border-radius: 0;
+}
+
+/* Lock app to viewport and prevent page scroll */
+html, body, #root { height: 100vh; margin: 0; overflow: hidden; }
+
+.bugbox-popup { display: flex; height: 100vh; width: 100%; overflow: hidden; }
+.bbx-slim-sidebar { width: 220px; min-width: 220px; height: 100%; }
+.bugbox-popup > .App { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; height: 100%; overflow: hidden; }
+
+.bugbox-logo-container, .chat-header, .badges-holder { flex: 0 0 auto; }
+
+.chat-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-fullbleed {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+}
+
+.chat-fullbleed .cs-chat-container {
+  display: grid !important;
+  grid-template-rows: 1fr auto auto !important;
+  height: 100% !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: hidden !important;
+}
+
+.chat-fullbleed .cs-message-list {
+  grid-row: 1 / 2;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-fullbleed .cs-message-input { grid-row: 2 / 3; margin: 0 !important; }
+.chat-fullbleed .cs-input-toolbox { grid-row: 3 / 4; margin: 0 !important; }
+
+.chat-fullbleed .cs-main-container,
+.chat-fullbleed .cs-chat-container,
+.chat-fullbleed .cs-message-list {
+  width: 100% !important;
+  max-width: none !important;
+  align-self: stretch !important;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.bugbox-popup > .App {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.App { padding: 90px 20px 0 20px; }
+
+.cs-message-list { min-height: 0 !important; overflow-y: auto !important; }
+
+/* Badges strip (unchanged) */
+.badges-strip{
+  display: flex;
+  gap: 16px;
+  padding: 6px 10px 0;
+  max-height: 160px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.badges-strip > * { flex: 0 0 auto; }
+
+.App.with-badges { padding-top: 90px; }
+
+.badges-holder{
+  display:flex;
+  gap:16px;
+  padding:6px 12px 0;
+  max-height:140px;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.badges-holder > *{ flex:0 0 auto; }
+.App.with-badges{ padding-top:70px; }
+
+/* Header buttons should look like buttons even when disabled */
+.chat-header button {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+/* Disabled states still boxed/visible in light mode */
+.chat-header button:disabled {
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  border: 1px solid var(--border-color);
+  opacity: 0.55;              /* keep it obviously disabled but still visible */
+  cursor: not-allowed;
+}
+
+/* Style Chatscope's contenteditable placeholder */
+.cs-message-input__content-editor[data-placeholder]:empty::before {
+  /* content is already supplied by the library; we just style it */
+  color: var(--text-color) !important;  /* white-ish in dark mode */
+  opacity: 0.6 !important;              /* subtle, but readable */
 }
