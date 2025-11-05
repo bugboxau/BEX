@@ -21,26 +21,23 @@
 
 /* === MESSAGE INPUT FIELD === */
 .cs-message-input__content-editor {
-  background-color: var(--bugbox-light-gray) !important;
-  color: var(--bugbox-dark-gray) !important;
-  border: 1px solid var(--bugbox-secondary) !important; /* Keep a clean border */
-  border-radius: 12px !important; /* Ensure rounded corners */
-  padding: 10px !important; /* Reduce padding */
-  font-size: 0.9rem !important; /* Reduce font size */
-  box-shadow: none !important; /* Remove any shadow */
-  width: 100% !important; /* Ensure it spans the full width of the container */
-  height: 40px !important; /* Reduce height */
-  overflow: hidden !important; /* Prevent content from overflowing */
-  box-sizing: border-box !important; /* Ensure padding and border are included in size */
+  height: auto !important;          /* Allow dynamic height */
+  max-height: 200px !important;     /* Prevent excessive growth */
+  overflow-y: auto !important;      /* Scrollbar if needed */
+  resize: none !important;          /* Prevent manual resize */
+  transition: height 0.2s ease;     /* Smooth growth */
+  box-sizing: border-box !important;
 }
 
+/* Ensure placeholder colour remains */
 .cs-message-input__content-editor::placeholder {
   color: var(--bugbox-secondary) !important;
 }
 
+/* Remove default focus outline */
 .cs-message-input__content-editor:focus {
-  outline: none !important; /* Remove focus outline */
-  box-shadow: none !important; /* Remove focus shadow */
+  outline: none !important;
+  box-shadow: none !important;
   border: none !important;
 }
 
@@ -94,31 +91,26 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for depth */
 }
 
-/* Remove blue glow and outline from the wrapper */
+/* === WRAPPER FIXES TO ALLOW EXPANDING TEXTAREA === */
 .cs-message-input__content-editor-wrapper {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important; /* Remove any borders */
-  background-color: transparent !important; /* Ensure no background color is applied */
-  border-radius: 12px !important; /* Ensure wrapper matches the input field */
-  overflow: hidden !important; /* Prevent content from overflowing */
-  box-sizing: border-box !important; /* Ensure proper sizing */
+  overflow: visible !important;
+  box-sizing: border-box !important;
 }
 
 .cs-message-input__content-editor-wrapper:focus,
 .cs-message-input__content-editor-wrapper:focus-within {
   outline: none !important;
   box-shadow: none !important;
-  border: none !important; /* Ensure no borders are applied on focus */
+  border: none !important;
 }
 
-/* Fix square corners for the scrollbar container */
+/* Fix scroll container rounding */
 .scrollbar-container.cs-message-input__content-editor-container {
-  border-radius: 12px !important; /* Match the input field's rounded corners */
-  box-shadow: none !important; /* Remove any shadow */
-  border: none !important; /* Remove any border */
-  background-color: transparent !important; /* Ensure no background color */
-  overflow: hidden !important; /* Prevent content from overflowing */
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  overflow: hidden !important;
 }
 
 /* Style the main App container */

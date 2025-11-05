@@ -1,7 +1,7 @@
 import { getOfflineResponse } from './utils/offlineTutor';
 import { courses } from "./utils/courses";
 import BadgeDisplay from './components/BadgeDisplay';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import './App.css';
 import './Chat.css';
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
@@ -176,6 +176,8 @@ export default function App() {
       return { ...c, messages: next };
     }));
   };
+
+  const messageInputRef = useRef(null);
 
   // ---- UI state 
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -1075,12 +1077,22 @@ const processUploadedFile = async (file) => {
           <MessageInput
             placeholder="Type your message here..."
             value={inputValue}
-            onChange={(e) => setInputValue(e)}
+            onChange={(val) => setInputValue(val)}
             onSend={(msg) => handleSend(msg)}
             attachButton={false}
+            autoFocus
+            resize="vertical"        // allow vertical resizing
+            maxHeight="200px"        // max height before scroll
+            ref={messageInputRef}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();       // prevent newline
+                handleSend(inputValue);   // send message
+              }
+            }}
           />
 
-                    <InputToolbox>
+            <InputToolbox>
             <button
               type="button"
               onClick={() => document.getElementById("file-upload").click()}

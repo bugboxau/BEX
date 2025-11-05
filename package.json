@@ -13,11 +13,13 @@
   "dependencies": {
     "@chatscope/chat-ui-kit-react": "^2.0.3",
     "dotenv": "^16.6.1",
+    "netlify": "^23.9.5",
     "openai": "^4.89.0",
     "pdfjs-dist": "^3.4.120",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.1.0",
+    "react-textarea-autosize": "^8.5.9",
     "rehype-highlight": "^6.0.0",
     "tesseract.js": "^6.0.1"
   },

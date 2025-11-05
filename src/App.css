@@ -447,6 +447,21 @@ input:focus, textarea:focus, .cs-message-input__content-editor:focus {
   flex: 0 0 auto !important;
 }
 
+.cs-message-input textarea {
+  min-height: 40px;       /* starting height */
+  max-height: 1000px;      /* maximum height before scrolling */
+  height: auto;           /* allow auto expansion */
+  overflow-y: auto;       /* scroll once max-height is reached */
+  line-height: 1.4;
+  font-family: monospace;
+  padding: 8px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: none;           /* prevent manual resizing */
+  box-sizing: border-box;
+}
+
 /* Show Badges button */
 .show-badges-btn {
   background-color: darkgrey;
@@ -1458,6 +1473,7 @@ html, body, #root { height: 100vh; margin: 0; overflow: hidden; }
     font-size: 14px;
   }
 }
+
 /* ===== QUIZ MODAL STYLES ===== */
 .quiz-modal-overlay {
   position: fixed;
