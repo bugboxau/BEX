@@ -539,13 +539,22 @@ export default function App() {
     };
 
     debugLog('[API Request Body]', apiRequestBody);
-
       try {
       const response = await fetch("http://localhost:3001/api/ask-bot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
       });
+      
+      //Return to Netlify if required
+      /*
+      try {
+      const response = await fetch(".netlify/functions/ask-bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
+      });
+      */
 
       if (!response.ok) {
         const errorText = await response.text();

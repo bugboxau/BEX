@@ -2,7 +2,9 @@
 
 # Bugbox AI Tutor
 
-This project implements the **AI tutor** BEX, designed to help young students understand the basics of coding, robotics, and Arduino. It uses OpenAI’s `gpt-4o` API and a modern React-based frontend to deliver clean, lesson-friendly interactions through a dynamic chat interface. The current plan is for it to be implemented through an IFrame on to Bugbox Playground. To do so, this trimester we have built an URL/Site through Netlify and switched our build command to it.  
+This project implements BEX, Project Bugbox's **AI tutor**, designed to help young students understand the basics of coding, robotics, and Arduino. It uses OpenAI’s `gpt-4o` API and a modern React-based frontend to deliver clean, lesson-friendly interactions through a dynamic chat interface. The current plan is for it to be implemented through an IFrame within BBX. We previously had a working URL deployment with Netlify, but we have since migrated to Vercel.
+
+Please read the following instructions to ensure compatibility.
 
 ---
 
@@ -17,11 +19,15 @@ This project implements the **AI tutor** BEX, designed to help young students un
 
 ---
 
-##Repository Structure
+## Repository Structure
 
-This project is split across two repositories due to having to workaround Netlify. Due to being an organization, Redback will have to pay a $2K fine to access Netlify. Thus we have forked it to a personal account and made it public so that multiple people can contribute to the repository and push to Netlify automatically. As it is public, we will need to store an working version of the repository safely, thus we will have to push to both repositories upon completion. 
--https://github.com/bugboxau/BEX (Repository linked to Netlify)
--https://github.com/Redback-Operations/redback-bugbox-ai (Private Organization Repository)
+This project exists across **two separate repositories** due to paywall restrictions. To facilitate collaboration, a public repository was created for contributions and automated deployment on Vercel and Netlify. The private organizational repository servers as the secure main storage location. 
+
+**The Repository linked to deployments:**
+-https://github.com/bugboxau/BEX 
+
+**The Repository stored privately:**
+-https://github.com/Redback-Operations/redback-bugbox-ai 
 
 ## Prerequisites
 
@@ -103,7 +109,7 @@ origin  https://github.com/Redback-Operations/redback-bugbox-ai.git (fetch)
 origin  https://github.com/Redback-Operations/redback-bugbox-ai.git (push)
 ```
 
-Always push as a group to the main organization repository (the one you cloned from) and leave it to one team member to pull these changes and push to the Bugbox repository which is connected to Netlify. 
+Always push as a group to the main organization repository (the one you cloned from) and leave it to one team member to pull these changes and push to the Bugbox repository which is connected to Netlify and Vercel. 
 
 ```
 git add .
@@ -111,11 +117,9 @@ git commit -m "BEX update"
 git push origin bugbox
 ```
 
-## Requirements on Netlify
+## Requirements for Vercel
 
-Dylan Nguyen's personal Netlify account is hosting BEX @ https://bex-project-bugbox.netlify.app/ which you can check to see if the pushes have worked. If you have a white screen, consult with Dylan for access to the Netlify Account and changes will have to be made. 
-
-Netlify safely stores your OPEN_API_KEY. It is currently using my API_KEY which will run out after I complete Capstone, when it runs out you can add one by going to:
+Dylan Nguyen's personal Vercel account is hosting BEX @ which you can check to see if the pushes have worked.Vercel safely stores your OPEN_API_KEY. You can add your own key if needed with: 
 
 Deployment Settings -> Environment Variables -> Create new environment variable. 
 
@@ -125,15 +129,53 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## Running the Application
 
-Assuming that all dependencies have been are installed and your API key is secured in a .env file, to start the development server run the following command:
+Assuming that all dependencies have been are installed and your API key is secured in a .env file, to start the development server run the following commands:
 
 ```bash
-netlify dev 
+node src/server.js
 ```
 
-This will start the app on `http://localhost:5173/` (default Vite port), and 'http://localhost:8888/' (default Netlify Host), where you can interact with the ChatGPT AI.
+```bash
+npm run dev
+```
+
+This will launch: 
+
+-The React app at http://localhost:5173/
+-The API server at http://localhost:3000/
+
+With which you can interact with BEX in your browser. 
 
 ---
+
+## Netlify
+
+If a return to Netlify is ever required, all that is needed is to replace this API call/method. 
+
+```bash
+try {
+    const response = await fetch("http://localhost:3001/api/ask-bot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
+});
+```
+with this:
+
+```bash
+try {
+    const response = await fetch(".netlify/functions/ask-bot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
+});
+```
+
+It will switch the build back from Vercel to Netlify locally. Where you can run BEX through this command. 
+
+```bash
+netlify dev
+```
 
 ## How It Works
 
