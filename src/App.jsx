@@ -31,7 +31,7 @@ import IndependentQuiz from './components/IndependentQuiz';
 import quizData from './components/quizData.jsx';
 
 // === Config ===
-const API_KEY = import.meta.env.OPENAI_API_KEY;
+const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const DEBUG = true;
 const OPENAI_MODEL = 'gpt-4o';
 const MAX_FILE_TEXT = 1000;
@@ -540,8 +540,8 @@ export default function App() {
 
     debugLog('[API Request Body]', apiRequestBody);
 
-    try {
-      const response = await fetch("/.netlify/functions/ask-bot", {
+      try {
+      const response = await fetch("http://localhost:3001/api/ask-bot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),

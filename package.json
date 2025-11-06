@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@chatscope/chat-ui-kit-react": "^2.0.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.6.1",
+    "express": "^5.1.0",
     "netlify": "^23.9.5",
     "openai": "^4.89.0",
     "pdfjs-dist": "^3.4.120",
