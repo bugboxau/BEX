@@ -40,7 +40,7 @@ const STORAGE_KEY = 'bbx_convos_v2';
 function debugLog(...args) { if (DEBUG) console.log(...args); }
 const uuid = () => Math.random().toString(36).slice(2, 10);
 const greeting = () => ({
-  message: "Hello! I'm your Bugbox Tutor. How can I help you?",
+  message: "Hello! I'm your BEX your friendly tutor. How can I help you?",
   sentTime: 'just now',
   sender: 'ChatGPT',
   direction: 'incoming',
@@ -676,7 +676,7 @@ export default function App() {
             <div className="modal-overlay">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h2>Welcome to Bugbox AI!</h2>
+                  <h2>Welcome to Project Bugbox!</h2>
                   <p>Before we get going, please agree to the following.</p>
                 </div>
 
@@ -799,7 +799,7 @@ export default function App() {
                   <ChatContainer>
                     <MessageList
                       scrollBehavior="smooth"
-                      typingIndicator={isTyping ? <TypingIndicator content="BugBox is thinking" /> : null}
+                      typingIndicator={isTyping ? <TypingIndicator content="BEX is calculating" /> : null}
                     >
                       {messages.map((message, i) => (
                         <Message
