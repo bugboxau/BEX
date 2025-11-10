@@ -539,6 +539,7 @@ export default function App() {
     };
 
     debugLog('[API Request Body]', apiRequestBody);
+      //Vercel Deployment. 
       try {
       const response = await fetch("/api/ask-bot", {
         method: "POST",
