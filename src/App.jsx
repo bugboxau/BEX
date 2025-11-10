@@ -540,11 +540,21 @@ export default function App() {
 
     debugLog('[API Request Body]', apiRequestBody);
       try {
+      const response = await fetch("/api/ask-bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
+      });
+
+      //Local Development - Run with npm run dev, and node src/server.js
+      /*
+      try {
       const response = await fetch("http://localhost:3001/api/ask-bot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
       });
+      */
       
       //Return to Netlify if required
       /*
