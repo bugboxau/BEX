@@ -35,7 +35,7 @@ Before running the project, ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (v14 or higher)
 - [npm](https://www.npmjs.com/) (included with Node)
 - A valid OpenAI API key (requires paid account)
-- Netlify. Run "npm install Netlify"
+- Netlify (If required). Run "npm install -g netlify-cli"
 
 ---
 
@@ -114,12 +114,12 @@ Always push as a group to the main organization repository (the one you cloned f
 ```
 git add .
 git commit -m "BEX update"
-git push origin bugbox
+git push bugbox main
 ```
 
 ## Requirements for Vercel
 
-Dylan Nguyen's personal Vercel account is hosting BEX @ which you can check to see if the pushes have worked.Vercel safely stores your OPEN_API_KEY. You can add your own key if needed with: 
+Dylan Nguyen's personal Vercel account is hosting BEX @ which you can check to see if the pushes have worked. Vercel safely stores your OPEN_API_KEY. You can add your own key if needed with: 
 
 Deployment Settings -> Environment Variables -> Create new environment variable. 
 
@@ -127,30 +127,15 @@ Deployment Settings -> Environment Variables -> Create new environment variable.
 OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-## Running the Application
+### Current Deployment
 
-Assuming that all dependencies have been are installed and your API key is secured in a .env file, to start the development server run the following commands:
+It is currently running on Vercel. The build command for it is vercel dev, which requires you to sign into Vercel with your laptop ID. Since none of us have Dylans laptop, we'll have to modify the code locally so that we can develop locally:  
 
-```bash
-node src/server.js
-```
+## Running the Application Locally
 
-```bash
-npm run dev
-```
+Assuming that all dependencies have been are installed and your API key is secured in a .env file, you can start developing locally. 
 
-This will launch: 
-
--The React app at http://localhost:5173/
--The API server at http://localhost:3000/
-
-With which you can interact with BEX in your browser. 
-
----
-
-## Netlify
-
-If a return to Netlify is ever required, all that is needed is to replace this API call/method. 
+You will have to replace the **in place** API call/method with this: 
 
 ```bash
 try {
@@ -160,7 +145,33 @@ try {
     body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
 });
 ```
-with this:
+
+To start the development server run the following commands:
+
+```bash
+node src/server.js
+```
+
+Then in another command prompt tab: 
+
+```bash
+npm run dev
+```
+
+This will launch: 
+
+-The React app at http://localhost:5173/
+-The API server at http://localhost:3001/
+
+With which you can interact with BEX in your browser. 
+
+---
+
+## Netlify
+
+If a return to Netlify is ever required, all that is needed is to replace the API call/method with the following method: 
+
+### Code for Netlify: 
 
 ```bash
 try {
@@ -171,10 +182,28 @@ try {
 });
 ```
 
-It will switch the build back from Vercel to Netlify locally. Where you can run BEX through this command. 
+It will switch the build back from Vercel to Netlify. It will also be capable of being hosted by Netlify. 
+
+Though you must run BEX locally through this command:
 
 ```bash
 netlify dev
+```
+**NOTE: You can work locally through either of the two methods listed above**
+
+## Before pushing to Git
+
+Before you push to Git, it is **absolutely critical** that you fix the api call/method prior. 
+
+It is all included and saved in app.jsx with code comments, but I'll include it here for safety. 
+
+```bash
+try {
+    const response = await fetch("/api/ask-bot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
+});
 ```
 
 ## How It Works

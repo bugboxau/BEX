@@ -1,6 +1,12 @@
 /*
-*Local Development
-//api/ask-bot.js
+* api/ask-bot.js
+*
+* This file provides an API route that handles POST requests to send messages ot the OpenAI API 
+* and returns the AI tutors response. 
+*
+* It serves as the backend interface for both local and deployments with Vercel.
+*/
+
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -30,38 +36,7 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
-*/
 
-//Vercel Development: 
-//api/ask-bot.js
-import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  try {
-    const { messages } = req.body;
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: "No messages provided" });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages,
-      max_tokens: 300,
-      temperature: 0.7,
-    });
-
-    const reply = completion.choices[0]?.message?.content || "";
-    res.status(200).json({ reply });
-  } catch (err) {
-    console.error("[ask-bot] error", err);
-    res.status(500).json({ error: err.message });
-  }
-}
 
 

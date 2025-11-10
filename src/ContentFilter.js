@@ -48,7 +48,7 @@ function buildConcatenationPatterns(patterns) {
 }
 
 
-// Merge both lists
+//Merge both lists
 const bannedPatterns = [
   ...baseBannedPatterns,
   ...buildConcatenationPatterns(baseBannedPatterns),

@@ -1,4 +1,10 @@
-//src/tutorConfig.js
+/*
+* src/tutorConfig.js
+*
+* This file defines a function that generates a structured system message for BEX, it configures BEX's
+* teaching style, tone, and guidance rules based on the student's age and lesson focus to provide age-appropriate, 
+* encouraging, and interactive learning. 
+*/
 
 export function generateSystemMessage(studentName = "student", studentAge = 10, studentLesson = "") {
   const tone = studentAge < 10
@@ -9,6 +15,9 @@ export function generateSystemMessage(studentName = "student", studentAge = 10, 
     ? `The student is currently learning about "${studentLesson}". Keep your questions and guidance focused on that topic.`
     : "You may assist with general questions about robotics and programming, to encourage the student to pursue the field.";
 
+  /*
+  * In this section, you can add more configuration to the tutor bot by adding instruction lines. 
+  */
   return {
     role: 'system',
     content: [

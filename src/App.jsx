@@ -1,3 +1,6 @@
+// =====================================
+// Imports – External libs & styles
+// =====================================
 import { getOfflineResponse } from './utils/offlineTutor';
 import { courses } from "./utils/courses";
 import BadgeDisplay from './components/BadgeDisplay';
@@ -24,11 +27,8 @@ import { extractTextFromPDF } from './FileProcessor';
 import { extractText } from './FileProcessor.js';
 
 import ChatHistory from './ChatHistory.jsx';
-import ProgressBar from './components/ProgressBar';
 import useCourseProgress from './hooks/useCourseProgress';
-import QuizComponent from './components/QuizComponent';
-import IndependentQuiz from './components/IndependentQuiz';
-import quizData from './components/quizData.jsx';
+
 
 // === Config ===
 const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -37,6 +37,9 @@ const OPENAI_MODEL = 'gpt-4o';
 const MAX_FILE_TEXT = 1000;
 const STORAGE_KEY = 'bbx_convos_v2';
 
+// =====================================
+// Small utilities (debug, uuid, greeting)
+// =====================================
 function debugLog(...args) { if (DEBUG) console.log(...args); }
 const uuid = () => Math.random().toString(36).slice(2, 10);
 const greeting = () => ({
@@ -47,6 +50,9 @@ const greeting = () => ({
   avatar: '🤖',
 });
 
+// =====================================
+// <App/> component
+// =====================================
 export default function App() {
   // ---- Conversations state (persisted) ----
   const [convos, setConvos] = useState(() => {
@@ -60,6 +66,9 @@ export default function App() {
   const [activeId, setActiveId] = useState(() => (convos[0] ? convos[0].id : undefined));
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(convos)); }, [convos]);
 
+// -------------------------------------
+// Derived: active conversation + helpers
+// -------------------------------------
   const activeConvo = useMemo(
     () => convos.find(c => c.id === activeId) ?? convos[0],
     [convos, activeId]
@@ -74,7 +83,9 @@ export default function App() {
     }));
   };
 
-  // ---- UI state ----
+// -------------------------------------
+// UI state (chat, files, panels, badges)
+// -------------------------------------
   const [uploadedFile, setUploadedFile] = useState(null);
   const [pendingFileContent, setPendingFileContent] = useState('');
   const [uploadFileName, setUploadFileName] = useState('');
@@ -86,16 +97,18 @@ export default function App() {
   const [showQuiz, setShowQuiz] = useState(false);
   const [courseFlow, setCourseFlow] = useState({
     active: false,
-    stage: 'welcome', // 'welcome', 'video', 'quiz', 'badge'
+    stage: 'welcome', // 'welcome', video, quiz and badges have been removed for BBX integration
     currentCourse: null,
     earnedBadges: []
   });
-
+  // Leave this, as removing the courseID and certificate parts may cause issues
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState('intro-course');
   const [showCertificateModal, setShowCertificateModal] = useState(false);
 
-  // Theme
+// -------------------------------------
+// Theme state & persistence (dark/light)
+// -------------------------------------
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     return savedTheme ? savedTheme === 'dark' : false;
@@ -107,18 +120,25 @@ export default function App() {
     localStorage.setItem('theme', currentTheme);
   }, [darkMode]);
 
-  // Onboarding
+// -------------------------------------
+// Onboarding state (modal + student info)
+// -------------------------------------
   const [showModal, setShowModal] = useState(true);
   const [studentName, setStudentName] = useState('');
   const [studentAge, setStudentAge] = useState('');
   const [studentLesson, setStudentLesson] = useState('');
 
-  // Agreements
+// -------------------------------------
+// Agreements (checkboxes) + image buffer
+// -------------------------------------
   const [agreeRespect, setAgreeRespect] = useState(false);
   const [agreeFocus, setAgreeFocus]   = useState(false);
   const [agreeSafety, setAgreeSafety] = useState(false);
   const [pendingImageData, setPendingImageData] = useState(null); // { url, name, mime }
 
+// -------------------------------------
+// Helpers (file → data URL, course progress)
+// -------------------------------------
   const fileToDataURL = (file) =>
     new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -129,12 +149,17 @@ export default function App() {
 
   const { progress, markStepCompleted } = useCourseProgress(selectedCourseId);
 
+// -------------------------------------
+// Derived: allAgreed checkbox gate
+// -------------------------------------
   const allAgreed = useMemo(
     () => agreeRespect && agreeFocus && agreeSafety,
     [agreeRespect, agreeFocus, agreeSafety]
   );
 
-  // ---- Sidebar actions ----
+// =====================================
+// Sidebar actions (new/rename/select/delete)
+// =====================================  
   const handleNewChat = () => {
     const c = { id: uuid(), title: 'New chat', messages: [greeting()] };
     setConvos(prev => [c, ...prev]);
@@ -162,7 +187,9 @@ export default function App() {
   };
   const handleSelectChat = (id) => setActiveId(id);
 
-  // ---- Reset Student Info (only clears active chat) ----
+// =====================================
+// Reset Student Info (active chat only)
+// =====================================
   const resetStudentInfo = () => {
     const confirmed = window.confirm(
       'Are you sure you want to reset your name, age, and lesson?\nThis will restart the conversation setup.'
@@ -173,189 +200,9 @@ export default function App() {
     setShowModal(true);
   };
 
-  // Course helpers (left intact; just no header buttons now)
-  const startCourse = (courseId = 'intro-course') => {
-    const course = courses.find(c => c.id === courseId) || sampleCourse;
-    setSelectedCourseId(courseId);
-    setCourseFlow({
-      active: true,
-      stage: 'video',
-      currentCourse: course,
-      earnedBadges: []
-    });
-  };
-  const completeWelcome = () => {
-    if (courseFlow.currentCourse) {
-      markStepCompleted('welcome', courseFlow.currentCourse.steps.length);
-    }
-    setCourseFlow(prev => ({ ...prev, stage: 'video' }));
-  };
-  const completeVideo = () => {
-    if (courseFlow.currentCourse) {
-      markStepCompleted('video', courseFlow.currentCourse.steps.length);
-    }
-    setCourseFlow(prev => ({ ...prev, stage: 'quiz' }));
-  };
-  const completeQuiz = (success) => {
-    if (success) {
-      if (courseFlow.currentCourse) {
-        markStepCompleted('quiz', courseFlow.currentCourse.steps.length);
-      }
-      setCourseFlow(prev => ({
-        ...prev,
-        stage: 'badge',
-        earnedBadges: [...prev.earnedBadges, courseFlow.currentCourse.badge]
-      }));
-    }
-  };
-  const closeCourse = () => {
-    setCourseFlow({ active: false, stage: 'welcome', currentCourse: null, earnedBadges: [] });
-  };
-  const handleBadgeClick = (badgeName) => {
-    const certificate = certificateData.find(cert => cert.badgeName === badgeName);
-    if (certificate) {
-      setSelectedCertificate(certificate);
-      setShowCertificateModal(true);
-    }
-  };
-
-  const VideoPlayer = ({ videoId, onVideoComplete }) => {
-    const [videoEnded, setVideoEnded] = useState(false);
-    return (
-      <div className="video-section">
-        <h3>Watch this programming tutorial:</h3>
-        <div className="video-container">
-          <iframe
-            width="560"
-            height="315"
-            src={`https://www.youtube.com/embed/${videoId}`}
-            title="Programming Tutorial"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            onEnded={() => setVideoEnded(true)}
-          ></iframe>
-        </div>
-        {videoEnded && (
-          <button className="continue-btn" onClick={onVideoComplete}>
-            Continue to Quiz ➡️
-          </button>
-        )}
-      </div>
-    );
-  };
-
-  const QuizComponentInline = ({ questions, onQuizComplete }) => {
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [selectedAnswers, setSelectedAnswers] = useState([]);
-    const [quizCompleted, setQuizCompleted] = useState(false);
-
-    const handleAnswerSelect = (answerIndex) => {
-      const newAnswers = [...selectedAnswers];
-      newAnswers[currentQuestion] = answerIndex;
-      setSelectedAnswers(newAnswers);
-      if (currentQuestion < questions.length - 1) {
-        setTimeout(() => setCurrentQuestion(currentQuestion + 1), 500);
-      } else {
-        setQuizCompleted(true);
-      }
-    };
-
-    const calculateScore = () =>
-      questions.reduce((score, question, index) =>
-        score + (selectedAnswers[index] === question.correctAnswer ? 1 : 0), 0);
-
-    if (quizCompleted) {
-      const score = calculateScore();
-      const passed = score >= questions.length * 0.7;
-      return (
-        <div className="quiz-results">
-          <h3>Quiz Complete! 🎉</h3>
-          <p>Your score: {score} out of {questions.length}</p>
-          {passed ? (
-            <div className="success-message">
-              <p>Congratulations! You passed! 🏆</p>
-              <button className="get-badge-btn" onClick={() => onQuizComplete(true)}>
-                Claim Your Badge! 🎓
-              </button>
-            </div>
-          ) : (
-            <div className="retry-message">
-              <p>Don't worry! You can try again.</p>
-              <button onClick={() => {
-                setCurrentQuestion(0);
-                setSelectedAnswers([]);
-                setQuizCompleted(false);
-              }}>
-                Try Again 🔄
-              </button>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    const question = questions[currentQuestion];
-    return (
-      <div className="quiz-section">
-        <h3>Question {currentQuestion + 1} of {questions.length}</h3>
-        <div className="question-card">
-          <p className="question-text">{question.question}</p>
-          <div className="answer-options">
-            {question.options.map((option, index) => (
-              <button
-                key={index}
-                className={`answer-btn ${selectedAnswers[currentQuestion] === index ? 'selected' : ''}`}
-                onClick={() => handleAnswerSelect(index)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const BadgeAward = ({ badgeName, onClose }) => (
-    <div className="badge-award">
-      <div className="badge-animation">✨</div>
-      <h2>Congratulations! 🎓</h2>
-      <p>You've earned the <strong>{badgeName}</strong> badge!</p>
-      <div className="badge-image"><div className="badge-icon">🏆</div></div>
-      <button className="close-badge-btn" onClick={onClose}>Continue Learning</button>
-    </div>
-  );
-
-  const CertificateModal = ({ certificate, studentName, onClose }) => {
-    if (!certificate) return null;
-    return (
-      <div className="certificate-modal-overlay">
-        <div className="certificate-modal-content" style={{
-          backgroundColor: certificate.backgroundColor,
-          color: certificate.textColor
-        }}>
-          <button className="certificate-close-btn" onClick={onClose}>✕</button>
-          <div className="certificate-header">
-            <h2>{certificate.title}</h2>
-            <div className="certificate-ribbon">🎓</div>
-          </div>
-          <div className="certificate-body">
-            <p className="certificate-awarded-to">This certificate is awarded to</p>
-            <h3 className="student-name">{studentName || 'Student'}</h3>
-            <p className="certificate-description">{certificate.description}</p>
-            <div className="certificate-badge">🏆 {certificate.badgeName}</div>
-            <p className="certificate-date">Date: {new Date().toLocaleDateString()}</p>
-          </div>
-          <div className="certificate-footer">
-            <button className="download-btn" onClick={() => window.print()}>📥 Download Certificate</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ---- File upload ----
+// =====================================
+// File upload handlers (PDF/image) – BBX: may remove
+// =====================================
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -368,6 +215,9 @@ export default function App() {
 
   const MAX_ATTACHMENT_CHARS = 6000;
 
+// -------------------------------------
+// File processing (PDF OCR / image pass-through)
+// -------------------------------------
   const processUploadedFile = async (file) => {
     try {
       setIsTyping(true);
@@ -406,7 +256,9 @@ export default function App() {
     }
   };
 
-  // ---- Send message (updates ONLY the active conversation) ----
+// =====================================
+// Send message pipeline (UI → state → API)
+// =====================================
   const handleSend = async (message) => {
     if (!message || message.trim() === '') return;
 
@@ -503,6 +355,9 @@ export default function App() {
     await processMessageToChatGPT(messagesForAI);
   };
 
+// -------------------------------------
+// Adapter: Chatscope message → OpenAI format
+// -------------------------------------
   function toApiMessage(m) {
     if (m.hidden && m.kind === 'image' && m.dataUrl) {
       return {
@@ -517,6 +372,9 @@ export default function App() {
     return { role, content: m.message };
   }
 
+// -------------------------------------
+// API call: ask-bot (local server / Netlify fallback)
+// -------------------------------------
   async function processMessageToChatGPT(chatMessages) {
     const apiMessages = [
       generateSystemMessage(studentName, Number(studentAge), studentLesson),
@@ -547,7 +405,8 @@ export default function App() {
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
       });
 
-      //Local Development - Run with npm run dev, and node src/server.js
+      //Local Development - Run with npm run dev, and node src/server.js in another
+      //command prompt tab
       /*
       try {
       const response = await fetch("http://localhost:3001/api/ask-bot", {
@@ -556,7 +415,7 @@ export default function App() {
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
       });
       */
-      
+           
       //Return to Netlify if required
       /*
       try {
@@ -616,7 +475,9 @@ export default function App() {
     }
   }
 
-  // NEW: Hint button
+// =====================================
+// Shortcut actions (Hint button)
+// =====================================
   const handleHintRequest = () => {
     const hintMessage = "Can I have a hint?";
     handleSend(hintMessage);
@@ -668,20 +529,6 @@ export default function App() {
               </button>
             </div>
           )}
-
-          {/* Badges (kept, but no header button to toggle) */}
-          {showBadges && !showModal && (
-            <div className="badges-holder">
-              <BadgeDisplay
-                studentName={studentName}
-                studentAge={studentAge}
-                studentLesson={studentLesson}
-                onClose={() => setShowBadges(false)}
-                onBadgeClick={handleBadgeClick}
-              />
-            </div>
-          )}
-
           {/* Onboarding modal */}
           {showModal && (
             <div className="modal-overlay">
@@ -741,68 +588,7 @@ export default function App() {
               </div>
             </div>
           )}
-
-
-          {/* Course Flow Area */}
-          {courseFlow.active && (
-            <div className="course-flow-container">
-              <div className="flex justify-between items-center mb-4">
-                <button
-                  className="back-to-chat-btn"
-                  onClick={closeCourse}
-                  style={{ marginBottom: '20px' }}
-                >
-                  ← Back to Chat
-                </button>
-                <div className="w-64">
-                  <ProgressBar
-                    progress={progress}
-                    label={`${courseFlow.currentCourse?.title} Progress`}
-                    color="green"
-                  />
-                </div>
-              </div>
-
-              {courseFlow.stage === 'welcome' && (
-                <CourseWelcome
-                  onStartCourse={completeWelcome}
-                  progress={progress}
-                />
-              )}
-
-              <div className="video-list max-h-96 overflow-y-auto">
-                {sampleCourse.videos.map((vid) => (
-                  <div key={vid.id} className="video-item p-2 border-b">
-                    <h3>{vid.title}</h3>
-                    <iframe
-                      width="100%"
-                      height="200"
-                      src={`https://www.youtube.com/embed/${vid.videoId}`}
-                      title={vid.title}
-                      frameBorder="0"
-                      allowFullScreen
-                    ></iframe>
-                  </div>
-                ))}
-              </div>
-
-              {courseFlow.stage === 'quiz' && courseFlow.currentCourse && (
-                <QuizComponent
-                  questions={courseFlow.currentCourse.questions}
-                  onQuizComplete={completeQuiz}
-                />
-              )}
-
-              {courseFlow.stage === 'badge' && courseFlow.currentCourse && (
-                <BadgeAward
-                  badgeName={courseFlow.currentCourse.badge}
-                  onClose={closeCourse}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Chat area - only when course is not active */}
+          {/* ----Chat area----- */}
           {!showModal && !courseFlow.active && (
             <div className="chat-wrapper">
               <div className="chat-fullbleed">
@@ -867,7 +653,6 @@ export default function App() {
                   </ChatContainer>
                 </MainContainer>
               </div>
-
               <div
                 style={{
                   display: "flex",
@@ -882,8 +667,6 @@ export default function App() {
           )}
         </div>
       </div>
-
-      {showQuiz && <IndependentQuiz />}
     </div>
   );
 }

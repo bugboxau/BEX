@@ -1,4 +1,11 @@
-// netlify/functions/ask-bot.js
+/*
+* netlify/functions/ask-bot.js
+*
+* This file implements a Netlify serverless function that handles POST request to send message to the OpenAI
+* API and return the AI tutor's reponse, enabling deployment without a traditional server. 
+*
+* Saved for it we ever need to return to Netlify. 
+*/
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

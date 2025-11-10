@@ -1,4 +1,9 @@
-// server.js
+/*
+* src/server.js
+*
+* This file sets up an express server that exposes a POST endpoint /api/ask-bot to send messages to the OpenAI API
+* and return the AI tutor's response, enabling local development testing. 
+*/
 import express from "express";
 import cors from "cors";
 import OpenAI from "openai";
