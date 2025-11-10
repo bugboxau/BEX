@@ -397,7 +397,11 @@ export default function App() {
     };
 
     debugLog('[API Request Body]', apiRequestBody);
-      //Vercel Deployment. 
+      /*
+      * Vercel Deployment. 
+      *
+      * This is the method you want uncommented when you push to Git. 
+      */
       try {
       const response = await fetch("/api/ask-bot", {
         method: "POST",
@@ -405,8 +409,11 @@ export default function App() {
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
       });
 
-      //Local Development - Run with npm run dev, and node src/server.js in another
-      //command prompt tab
+      /*
+      * Local Development
+      * 
+      * Run with npm run dev, and node src/server.js in another command prompt tab. 
+      */
       /*
       try {
       const response = await fetch("http://localhost:3001/api/ask-bot", {
@@ -415,8 +422,10 @@ export default function App() {
         body: JSON.stringify({ messages: [systemMessage, styleGuideMessage, ...apiMessages] }),
       });
       */
-           
-      //Return to Netlify if required
+
+      /*
+      * This is the method if we ever wish to deploy on Netlify again. 
+      */
       /*
       try {
       const response = await fetch(".netlify/functions/ask-bot", {
@@ -610,7 +619,7 @@ export default function App() {
                         >
                           <Message.CustomContent>
                             <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
-                              {message.message}
+                              {message.message.replace(/<br\s*\/?>/gi, '\n')}
                             </ReactMarkdown>
                           </Message.CustomContent>
                         </Message>
@@ -620,8 +629,9 @@ export default function App() {
                     <MessageInput
                       placeholder="Type your message here..."
                       value={inputValue}
-                      onChange={(e) => setInputValue(e)}
-                      onSend={(msg) => handleSend(msg)}
+                      onChange={(val) => setInputValue(val)}
+                      onSend={() => handleSend(inputValue.trim())}  // ← Line 1
+                      sendOnReturn={true}                           // ← Line 2
                       attachButton={false}
                     />
 
