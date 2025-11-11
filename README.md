@@ -123,7 +123,7 @@ Dylan Nguyen's personal Vercel account is hosting BEX @ which you can check to s
 
 Deployment Settings -> Environment Variables -> Create new environment variable. 
 
-```
+```bash
 OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
@@ -133,7 +133,7 @@ It is currently running on Vercel. The build command for it is vercel dev, which
 
 ## Running the Application Locally
 
-Assuming that all dependencies have been are installed and your API key is secured in a .env file, you can start developing locally. 
+Assuming that all dependencies have been installed and your API key is secured in a .env file, you can start developing locally. 
 
 You will have to replace the **in place** API call/method with this: 
 
@@ -160,8 +160,17 @@ npm run dev
 
 This will launch: 
 
--The React app at http://localhost:5173/
--The API server at http://localhost:3001/
+-The React app at:
+
+```bash
+http://localhost:5173/
+```
+
+-The API server at:
+
+```bash
+http://localhost:3001/
+```
 
 With which you can interact with BEX in your browser. 
 
